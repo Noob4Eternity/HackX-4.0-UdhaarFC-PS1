@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  AlertTriangle, 
-  FileCode, 
-  ExternalLink, 
+import {
+  AlertTriangle,
+  FileCode,
+  ExternalLink,
   ChevronDown,
   ChevronUp,
   Filter,
   Search
 } from 'lucide-react';
+import Link from 'next/link';
 import { Navbar } from '@/components/vibecheck/navbar';
 import { SeverityBadge } from '@/components/vibecheck/severity-badge';
 import { Button } from '@/components/ui/button';
@@ -30,22 +32,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { mockVulnerabilities, type Vulnerability } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { getReport } from '@/lib/api';
+import type { Report, Finding } from '@/lib/types';
 
-function VulnerabilityRow({ vulnerability, isExpanded, onToggle }: { 
-  vulnerability: Vulnerability; 
+function VulnerabilityRow({ finding, isExpanded, onToggle }: {
+  finding: Finding;
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const handleFixWithChatGPT = () => {
-    const encodedPrompt = encodeURIComponent(vulnerability.fixPrompt);
-    window.open(`https://chat.openai.com/?prompt=${encodedPrompt}`, '_blank');
+  const handleFixWithAI = () => {
+    if (finding.ai_prompt) {
+      const encodedPrompt = encodeURIComponent(finding.ai_prompt);
+      window.open(`https://chat.openai.com/?prompt=${encodedPrompt}`, '_blank');
+    }
   };
 
   return (
     <>
-      <TableRow 
+      <TableRow
         className={cn(
           'border-border/50 hover:bg-muted/20 transition-colors cursor-pointer',
           isExpanded && 'bg-muted/10'
@@ -54,33 +59,32 @@ function VulnerabilityRow({ vulnerability, isExpanded, onToggle }: {
       >
         <TableCell className="font-mono text-sm">
           <div className="flex items-center gap-2">
-            <FileCode className="h-4 w-4 text-muted-foreground" />
-            {vulnerability.file}
+            <FileCode className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="truncate max-w-[200px]">{finding.file_path || '—'}</span>
           </div>
         </TableCell>
         <TableCell className="text-center font-mono text-muted-foreground">
-          {vulnerability.lineNumber}
+          {finding.line_number || '—'}
         </TableCell>
         <TableCell className="text-center">
-          <SeverityBadge severity={vulnerability.severity} size="sm" />
+          <SeverityBadge severity={finding.severity} size="sm" />
         </TableCell>
-        <TableCell className="font-medium">{vulnerability.type}</TableCell>
+        <TableCell className="font-medium">{finding.title}</TableCell>
         <TableCell className="max-w-xs truncate text-muted-foreground text-sm">
-          {vulnerability.description}
-        </TableCell>
-        <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground font-mono">
-          {vulnerability.remediation.slice(0, 50)}...
+          {finding.description}
         </TableCell>
         <TableCell onClick={(e) => e.stopPropagation()}>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleFixWithChatGPT}
-            className="gap-2 text-primary border-primary/30 hover:bg-primary/10 whitespace-nowrap"
-          >
-            Fix with ChatGPT
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Button>
+          {finding.ai_prompt && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleFixWithAI}
+              className="gap-2 text-primary border-primary/30 hover:bg-primary/10 whitespace-nowrap"
+            >
+              Fix with AI
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </TableCell>
         <TableCell>
           <Button variant="ghost" size="sm" className="p-1">
@@ -92,11 +96,11 @@ function VulnerabilityRow({ vulnerability, isExpanded, onToggle }: {
           </Button>
         </TableCell>
       </TableRow>
-      
+
       <AnimatePresence>
         {isExpanded && (
           <TableRow className="border-border/50">
-            <TableCell colSpan={8} className="p-0">
+            <TableCell colSpan={7} className="p-0">
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
@@ -106,61 +110,54 @@ function VulnerabilityRow({ vulnerability, isExpanded, onToggle }: {
               >
                 <div className="p-6 bg-muted/5 border-t border-border/50">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Code Snippet */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <FileCode className="h-4 w-4 text-primary" />
-                        Code Context
-                      </h4>
-                      <div className="bg-background rounded-lg border border-border/50 overflow-hidden">
-                        <div className="p-1 bg-muted/30 border-b border-border/50">
-                          <span className="text-xs text-muted-foreground font-mono px-2">
-                            {vulnerability.file}:{vulnerability.lineNumber}
-                          </span>
-                        </div>
-                        <pre className="p-4 overflow-x-auto">
-                          <code className="text-sm font-mono text-muted-foreground whitespace-pre-wrap">
-                            {vulnerability.codeSnippet}
-                          </code>
-                        </pre>
-                        <div className="p-3 bg-red-500/5 border-t border-red-500/20">
-                          <span className="text-xs text-red-400 font-medium">Vulnerable Line:</span>
-                          <code className="block mt-1 text-sm font-mono text-red-300 bg-red-500/10 px-2 py-1 rounded">
-                            {vulnerability.vulnerableLine}
-                          </code>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Details */}
+                    {/* Description */}
                     <div className="space-y-4">
                       <div>
                         <h4 className="text-sm font-semibold text-foreground mb-2">Description</h4>
-                        <p className="text-sm text-muted-foreground">{vulnerability.description}</p>
+                        <p className="text-sm text-muted-foreground">{finding.description}</p>
                       </div>
-                      
+
                       <div>
                         <h4 className="text-sm font-semibold text-foreground mb-2">Recommended Fix</h4>
-                        <p className="text-sm text-muted-foreground">{vulnerability.remediation}</p>
+                        <p className="text-sm text-muted-foreground">{finding.remediation}</p>
                       </div>
-                      
-                      <div className="flex items-center gap-3 pt-2">
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
                         <span className="text-xs px-2.5 py-1 rounded-full bg-muted/50 text-muted-foreground capitalize">
-                          Category: {vulnerability.category}
+                          Category: {finding.category.replace(/_/g, ' ')}
                         </span>
                         <span className="text-xs px-2.5 py-1 rounded-full bg-muted/50 text-muted-foreground">
-                          ID: {vulnerability.id}
+                          ID: {finding.id}
+                        </span>
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-muted/50 text-muted-foreground">
+                          Tool: {finding.tool}
                         </span>
                       </div>
-                      
-                      <Button
-                        onClick={handleFixWithChatGPT}
-                        className="gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
-                      >
-                        Get AI-Powered Fix
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
                     </div>
+
+                    {/* AI Prompt */}
+                    {finding.ai_prompt && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <FileCode className="h-4 w-4 text-primary" />
+                          AI Fix Prompt
+                        </h4>
+                        <div className="bg-background rounded-lg border border-border/50 overflow-hidden">
+                          <pre className="p-4 overflow-x-auto">
+                            <code className="text-sm font-mono text-muted-foreground whitespace-pre-wrap">
+                              {finding.ai_prompt}
+                            </code>
+                          </pre>
+                        </div>
+                        <Button
+                          onClick={handleFixWithAI}
+                          className="mt-3 gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                        >
+                          Get AI-Powered Fix
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -173,34 +170,116 @@ function VulnerabilityRow({ vulnerability, isExpanded, onToggle }: {
 }
 
 export default function VulnerabilitiesPage() {
+  const searchParams = useSearchParams();
+  const scanId = searchParams.get('id');
+
+  const [report, setReport] = useState<Report | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  const filteredVulnerabilities = mockVulnerabilities.filter((vuln) => {
-    const matchesSearch = 
-      vuln.file.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vuln.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vuln.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesSeverity = severityFilter === 'all' || vuln.severity === severityFilter;
-    const matchesCategory = categoryFilter === 'all' || vuln.category === categoryFilter;
-    
+  useEffect(() => {
+    async function fetchData() {
+      if (!scanId) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const data = await getReport(scanId);
+        setReport(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load report');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [scanId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar title="Vulnerabilities" />
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!scanId) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar title="Vulnerabilities" />
+        <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
+          <div className="glass-card rounded-2xl p-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No scan selected</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Go to the dashboard and select a scan to view its vulnerabilities
+            </p>
+            <Button asChild className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10">
+              <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar title="Vulnerabilities" />
+        <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
+          <div className="glass-card rounded-2xl p-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">Error</h3>
+            <p className="text-sm text-muted-foreground">{error || 'Report not found'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Filter out llm_review findings (executive summary etc.)
+  const allFindings = report.findings.filter(f => f.category !== 'llm_review');
+
+  // Get unique categories for filter dropdown
+  const categories = [...new Set(allFindings.map(f => f.category))];
+
+  const filteredFindings = allFindings.filter((f) => {
+    const matchesSearch =
+      (f.file_path || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesSeverity = severityFilter === 'all' || f.severity === severityFilter;
+    const matchesCategory = categoryFilter === 'all' || f.category === categoryFilter;
+
     return matchesSearch && matchesSeverity && matchesCategory;
   });
 
   const severityCounts = {
-    critical: mockVulnerabilities.filter(v => v.severity === 'critical').length,
-    high: mockVulnerabilities.filter(v => v.severity === 'high').length,
-    medium: mockVulnerabilities.filter(v => v.severity === 'medium').length,
-    low: mockVulnerabilities.filter(v => v.severity === 'low').length,
+    critical: allFindings.filter(f => f.severity === 'critical').length,
+    high: allFindings.filter(f => f.severity === 'high').length,
+    medium: allFindings.filter(f => f.severity === 'medium').length,
+    low: allFindings.filter(f => f.severity === 'low').length,
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar title="Vulnerabilities" />
-      
+
       <div className="flex-1 p-6 lg:p-8 space-y-6">
         {/* Header Stats */}
         <motion.div
@@ -240,7 +319,7 @@ export default function VulnerabilitiesPage() {
               className="pl-10 bg-background/50 border-border/50"
             />
           </div>
-          
+
           <div className="flex gap-3">
             <Select value={severityFilter} onValueChange={setSeverityFilter}>
               <SelectTrigger className="w-40 bg-background/50 border-border/50">
@@ -253,21 +332,22 @@ export default function VulnerabilitiesPage() {
                 <SelectItem value="high">High</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="info">Info</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-44 bg-background/50 border-border/50">
+              <SelectTrigger className="w-52 bg-background/50 border-border/50">
                 <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="injection">Injection</SelectItem>
-                <SelectItem value="secrets">Secrets</SelectItem>
-                <SelectItem value="misconfiguration">Misconfiguration</SelectItem>
-                <SelectItem value="dependency">Dependency</SelectItem>
-                <SelectItem value="logic">Logic Flaws</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -288,12 +368,12 @@ export default function VulnerabilitiesPage() {
                   All Vulnerabilities
                 </h3>
                 <span className="text-sm text-muted-foreground">
-                  ({filteredVulnerabilities.length} found)
+                  ({filteredFindings.length} found)
                 </span>
               </div>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -301,34 +381,35 @@ export default function VulnerabilitiesPage() {
                   <TableHead className="text-muted-foreground">File</TableHead>
                   <TableHead className="text-muted-foreground text-center">Line</TableHead>
                   <TableHead className="text-muted-foreground text-center">Severity</TableHead>
-                  <TableHead className="text-muted-foreground">Type</TableHead>
+                  <TableHead className="text-muted-foreground">Title</TableHead>
                   <TableHead className="text-muted-foreground">Description</TableHead>
-                  <TableHead className="text-muted-foreground">Remediation</TableHead>
                   <TableHead className="text-muted-foreground">Action</TableHead>
                   <TableHead className="text-muted-foreground w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVulnerabilities.map((vulnerability) => (
+                {filteredFindings.map((finding) => (
                   <VulnerabilityRow
-                    key={vulnerability.id}
-                    vulnerability={vulnerability}
-                    isExpanded={expandedId === vulnerability.id}
+                    key={finding.id}
+                    finding={finding}
+                    isExpanded={expandedId === finding.id}
                     onToggle={() => setExpandedId(
-                      expandedId === vulnerability.id ? null : vulnerability.id
+                      expandedId === finding.id ? null : finding.id
                     )}
                   />
                 ))}
               </TableBody>
             </Table>
           </div>
-          
-          {filteredVulnerabilities.length === 0 && (
+
+          {filteredFindings.length === 0 && (
             <div className="p-12 text-center">
               <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">No vulnerabilities found</h3>
               <p className="text-sm text-muted-foreground">
-                Try adjusting your search or filter criteria
+                {allFindings.length === 0
+                  ? 'This scan found no vulnerabilities — great job!'
+                  : 'Try adjusting your search or filter criteria'}
               </p>
             </div>
           )}

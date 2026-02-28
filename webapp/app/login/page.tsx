@@ -67,7 +67,7 @@ export default function LoginPage() {
           {/* Logo and Header */}
           <div className="flex flex-col items-center mb-8">
             <Logo size="lg" />
-            <p className="text-muted-foreground mt-2 text-center italic">
+            <p className="text-muted-foreground mt-2 text-center">
               AI-powered vulnerability intelligence for your codebase
             </p>
           </div>

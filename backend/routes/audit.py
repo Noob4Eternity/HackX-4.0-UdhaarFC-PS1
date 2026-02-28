@@ -108,7 +108,7 @@ async def _sse_generator(scan_id: str):
     while True:
         status = SCAN_STATUS.get(scan_id)
         if status is None:
-            yield _sse_event("error", {"message": "Scan not found"})
+            yield _sse_event("scan_error", {"message": "Scan not found"})
             return
 
         # Emit any new progress messages
@@ -123,7 +123,7 @@ async def _sse_generator(scan_id: str):
             return
 
         if status["status"] == "error":
-            yield _sse_event("error", {"message": status.get("error", "Unknown error")})
+            yield _sse_event("scan_error", {"message": status.get("error", "Unknown error")})
             return
 
         await asyncio.sleep(0.5)
@@ -146,7 +146,7 @@ async def _scan_from_url(scan_id: str, repo_url: str) -> None:
     except Exception as exc:
         logger.error("URL scan %s failed: %s", scan_id, exc, exc_info=True)
         SCAN_STATUS[scan_id]["status"] = "error"
-        SCAN_STATUS[scan_id]["error"] = str(exc)
+        SCAN_STATUS[scan_id]["error"] = str(exc) or f"{type(exc).__name__}: {exc!r}"
     finally:
         if repo_path:
             repo_cloner.cleanup(repo_path)
@@ -158,13 +158,15 @@ async def _scan_from_oauth(
     """Clone a private repo using an OAuth token and run scan."""
     repo_path: str | None = None
     try:
+        SCAN_STATUS[scan_id]["progress"].append(f"Cloning {repo_name}...")
         clone_url = f"https://x-access-token:{github_token}@github.com/{repo_name}.git"
         repo_path = await repo_cloner.clone_from_url(clone_url)
+        SCAN_STATUS[scan_id]["progress"].append("Clone complete, starting scan...")
         await scan_runner.run_scan(repo_path, scan_id, trigger_source="oauth")
     except Exception as exc:
         logger.error("OAuth scan %s failed: %s", scan_id, exc, exc_info=True)
         SCAN_STATUS[scan_id]["status"] = "error"
-        SCAN_STATUS[scan_id]["error"] = str(exc)
+        SCAN_STATUS[scan_id]["error"] = str(exc) or f"{type(exc).__name__}: {exc!r}"
     finally:
         if repo_path:
             repo_cloner.cleanup(repo_path)

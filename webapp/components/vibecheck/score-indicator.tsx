@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { getScoreColor } from '@/lib/mock-data';
+import { getScoreColor } from '@/lib/types';
 
 interface ScoreIndicatorProps {
   score: number;

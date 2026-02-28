@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import shutil
+import subprocess
 import tempfile
 import zipfile
 from pathlib import Path
@@ -18,27 +19,36 @@ MAX_ZIP_SIZE = 50 * 1024 * 1024   # 50 MB
 MAX_ZIP_FILES = 1000
 
 
+def _git_clone_sync(url: str, target_dir: str) -> None:
+    """Run git clone synchronously (called from a thread)."""
+    proc = subprocess.run(
+        ["git", "clone", "--depth", "1", url, target_dir],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        err_msg = proc.stderr.strip() or proc.stdout.strip()
+        raise RuntimeError(f"git clone failed (exit {proc.returncode}): {err_msg}")
+
+
 async def clone_from_url(url: str, target_dir: str | None = None) -> str:
     """Shallow-clone a git repository from *url*.
 
     If *target_dir* is ``None``, a temporary directory is created.
     Returns the path to the cloned repo on disk.
+
+    Uses ``asyncio.to_thread`` + ``subprocess.run`` for Windows compatibility
+    (``asyncio.create_subprocess_exec`` requires ProactorEventLoop).
     """
     if target_dir is None:
         target_dir = tempfile.mkdtemp(prefix="vibeaudit_")
 
     logger.info("Cloning %s → %s", url, target_dir)
-    proc = await asyncio.create_subprocess_exec(
-        "git", "clone", "--depth", "1", url, target_dir,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await proc.communicate()
-
-    if proc.returncode != 0:
-        err_msg = stderr.decode().strip() or stdout.decode().strip()
+    try:
+        await asyncio.to_thread(_git_clone_sync, url, target_dir)
+    except RuntimeError:
         cleanup(target_dir)
-        raise RuntimeError(f"git clone failed (exit {proc.returncode}): {err_msg}")
+        raise
 
     logger.info("Clone complete: %s", target_dir)
     return target_dir
