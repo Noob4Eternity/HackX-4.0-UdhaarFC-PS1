@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import os
 import time
-
+from dotenv import load_dotenv
 import httpx
 import jwt
 
+load_dotenv()
 
 async def get_jwt_token() -> str:
     """Generate a JWT for authenticating as the GitHub App.
@@ -22,7 +23,7 @@ async def get_jwt_token() -> str:
     payload = {
         "iat": now - 60,       # Issued at — 60s in the past for clock drift
         "exp": now + (10 * 60),  # Expires in 10 minutes
-        "iss": int(app_id),
+        "iss": app_id,
     }
 
     return jwt.encode(payload, private_key, algorithm="RS256")

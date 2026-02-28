@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,11 +19,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger("backend.main")
 
+
+# ── Lifespan ────────────────────────────────────────────────────────
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("VibeAudit API starting up…")
+    await database.init_db()
+    logger.info("Database initialized.")
+    yield
+    logger.info("VibeAudit API shutting down…")
+
+
 # ── FastAPI app ──────────────────────────────────────────────────────
 app = FastAPI(
     title="VibeAudit API",
     description="Security auditor for vibe-coded repos",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # ── CORS — allow everything for dev (ngrok + localhost + prod) ──────
@@ -33,15 +48,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ── Startup ─────────────────────────────────────────────────────────
-
-
-@app.on_event("startup")
-async def on_startup() -> None:
-    logger.info("VibeAudit API starting up…")
-    await database.init_db()
-    logger.info("Database initialized.")
 
 
 # ── Include routers ─────────────────────────────────────────────────

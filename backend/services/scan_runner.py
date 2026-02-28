@@ -6,6 +6,10 @@ import logging
 import os
 import traceback
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from backend import database
 from backend.state import SCAN_STATUS
 

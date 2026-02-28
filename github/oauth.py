@@ -5,7 +5,10 @@ from __future__ import annotations
 import os
 import secrets
 
+from dotenv import load_dotenv
 import httpx
+
+load_dotenv()
 
 
 async def get_oauth_url() -> tuple[str, str]:

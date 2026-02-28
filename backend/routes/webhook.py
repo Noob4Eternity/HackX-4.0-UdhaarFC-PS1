@@ -8,7 +8,10 @@ import logging
 import os
 import uuid
 
+from dotenv import load_dotenv
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+
+load_dotenv()
 
 from backend.services import repo_cloner, scan_runner
 from backend.state import SCAN_STATUS
@@ -41,23 +44,24 @@ def _verify_signature(payload: bytes, signature: str | None) -> None:
 
 @router.post("/webhook")
 async def github_webhook(request: Request, background_tasks: BackgroundTasks):
-    """Handle GitHub App webhook events.
-
-    Only processes ``pull_request`` events with action ``opened`` or
-    ``synchronize``. Returns 200 immediately and runs the scan in the
-    background.
-    """
+    """Handle GitHub App webhook events."""
     payload = await request.body()
     signature = request.headers.get("X-Hub-Signature-256")
     _verify_signature(payload, signature)
 
     event = request.headers.get("X-GitHub-Event", "")
+    logger.info("📩 Webhook received — event=%s", event)
+
     if event != "pull_request":
+        logger.info("⏭️  Ignoring non-PR event: %s", event)
         return {"status": "ignored", "event": event}
 
     data = await request.json()
     action = data.get("action", "")
+    logger.info("📩 PR event — action=%s", action)
+
     if action not in ("opened", "synchronize"):
+        logger.info("⏭️  Ignoring PR action: %s", action)
         return {"status": "ignored", "action": action}
 
     repo_full = data["repository"]["full_name"]
@@ -65,6 +69,11 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks):
     pr_sha = data["pull_request"]["head"]["sha"]
     installation_id = data["installation"]["id"]
     scan_id = str(uuid.uuid4())
+
+    logger.info(
+        "🚀 Starting webhook scan — repo=%s, PR=#%d, sha=%s, scan_id=%s",
+        repo_full, pr_number, pr_sha[:8], scan_id,
+    )
 
     SCAN_STATUS[scan_id] = {
         "status": "pending",
@@ -99,10 +108,13 @@ async def _handle_pr_scan(
 
     try:
         # 1. Get authenticated client
+        logger.info("[%s] 🔑 Getting installation token (installation_id=%d)...", scan_id[:8], installation_id)
         client, token = await get_installation_client(installation_id)
+        logger.info("[%s] ✅ Got installation token", scan_id[:8])
 
         # 2. Set commit status → pending
-        await client.post(
+        logger.info("[%s] 📝 Setting commit status to 'pending'...", scan_id[:8])
+        resp = await client.post(
             f"https://api.github.com/repos/{repo_full}/statuses/{pr_sha}",
             json={
                 "state": "pending",
@@ -110,26 +122,17 @@ async def _handle_pr_scan(
                 "context": "vibeaudit",
             },
         )
+        logger.info("[%s] ✅ Commit status set (HTTP %d)", scan_id[:8], resp.status_code)
 
         # 3. Clone the repository
+        logger.info("[%s] 📦 Cloning %s...", scan_id[:8], repo_full)
         clone_url = f"https://x-access-token:{token}@github.com/{repo_full}.git"
         repo_path = await repo_cloner.clone_from_url(clone_url)
+        logger.info("[%s] ✅ Clone complete → %s", scan_id[:8], repo_path)
 
-        # 4. Run scan
-        await scan_runner.run_scan(repo_path, scan_id, trigger_source="webhook")
+        # 4. Run scan (single run — produces the full result)
+        logger.info("[%s] 🔍 Running vibe_check scan...", scan_id[:8])
 
-        # 5. Import result for the PR comment
-        from vibe_check.models.result import ScanResult
-        # Re-read status to check for errors
-        status = SCAN_STATUS.get(scan_id, {})
-        if status.get("status") == "error":
-            raise RuntimeError(status.get("error", "Scan failed"))
-
-        # Re-run a lightweight report generation for PR comment
-        # (the full result was already saved by scan_runner)
-        # For PR comments we re-import and use the markdown output
-        from vibe_check.utils.config import load_config
-        from vibe_check.core.orchestrator import Orchestrator
         from vibe_check.analyzers.secrets import SecretsAnalyzer
         from vibe_check.analyzers.sast import SASTAnalyzer
         from vibe_check.analyzers.dependencies import DependencyAnalyzer
@@ -137,6 +140,8 @@ async def _handle_pr_scan(
         from vibe_check.analyzers.compliance import ComplianceAnalyzer
         from vibe_check.analyzers.prompt_injection import PromptInjectionAnalyzer
         from vibe_check.analyzers.llm_summarizer import LLMSummarizer
+        from vibe_check.utils.config import load_config
+        from vibe_check.core.orchestrator import Orchestrator
 
         config = load_config(repo_path)
         analyzers = [
@@ -147,15 +152,38 @@ async def _handle_pr_scan(
         orchestrator = Orchestrator(analyzers=analyzers, config=config)
         result = await orchestrator.run(repo_path)
 
-        # 5. Post PR comment
-        await client.post(
-            f"https://api.github.com/repos/{repo_full}/issues/{pr_number}/comments",
-            json={"body": result.to_markdown()},
+        logger.info(
+            "[%s] ✅ Scan complete — score=%.1f, grade=%s, findings=%d",
+            scan_id[:8], result.score, result.grade, len(result.findings),
         )
 
-        # 6. Set commit status
+        # 5. Save to database
+        logger.info("[%s] 💾 Saving to database...", scan_id[:8])
+        verdict = "GO" if result.score >= FAIL_UNDER_SCORE else "NO-GO"
+        from backend import database
+        await database.save_scan(scan_id, result, "webhook", verdict)
+        logger.info("[%s] ✅ Saved (verdict=%s)", scan_id[:8], verdict)
+
+        # Update SCAN_STATUS
+        SCAN_STATUS[scan_id]["status"] = "complete"
+        SCAN_STATUS[scan_id]["report_id"] = scan_id
+
+        # 6. Post PR comment
+        logger.info("[%s] 💬 Posting PR comment on #%d...", scan_id[:8], pr_number)
+        markdown = result.to_markdown()
+        logger.info("[%s]    Comment length: %d chars", scan_id[:8], len(markdown))
+        resp = await client.post(
+            f"https://api.github.com/repos/{repo_full}/issues/{pr_number}/comments",
+            json={"body": markdown},
+        )
+        logger.info("[%s] ✅ PR comment posted (HTTP %d)", scan_id[:8], resp.status_code)
+        if resp.status_code >= 400:
+            logger.error("[%s] ❌ PR comment failed: %s", scan_id[:8], resp.text)
+
+        # 7. Set commit status
         passed = result.score >= FAIL_UNDER_SCORE
-        await client.post(
+        logger.info("[%s] 📝 Setting commit status to '%s'...", scan_id[:8], "success" if passed else "failure")
+        resp = await client.post(
             f"https://api.github.com/repos/{repo_full}/statuses/{pr_sha}",
             json={
                 "state": "success" if passed else "failure",
@@ -163,13 +191,17 @@ async def _handle_pr_scan(
                 "context": "vibeaudit",
             },
         )
+        logger.info("[%s] ✅ Commit status set (HTTP %d)", scan_id[:8], resp.status_code)
         logger.info(
-            "PR #%d on %s — score=%.1f, %s",
-            pr_number, repo_full, result.score, "PASS" if passed else "FAIL",
+            "[%s] 🎉 Done — PR #%d on %s — score=%.1f, %s",
+            scan_id[:8], pr_number, repo_full, result.score, "PASS" if passed else "FAIL",
         )
 
     except Exception as exc:
-        logger.error("Webhook scan failed for %s PR#%d: %s", repo_full, pr_number, exc, exc_info=True)
+        logger.error(
+            "[%s] ❌ Webhook scan FAILED for %s PR#%d: %s",
+            scan_id[:8], repo_full, pr_number, exc, exc_info=True,
+        )
         SCAN_STATUS[scan_id]["status"] = "error"
         SCAN_STATUS[scan_id]["error"] = str(exc)
 
@@ -189,6 +221,7 @@ async def _handle_pr_scan(
 
     finally:
         if repo_path:
+            logger.info("[%s] 🧹 Cleaning up %s", scan_id[:8], repo_path)
             repo_cloner.cleanup(repo_path)
         if client:
             await client.aclose()
