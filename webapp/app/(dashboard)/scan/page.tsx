@@ -99,7 +99,7 @@ export default function ScanPage() {
             <div className="text-4xl lg:text-5xl font-light text-foreground mb-4 font-[family-name:var(--font-playfair)]">
               Scan Your Codebase for
               <br />
-              <em className="font-extralight italic text-lilac/80 bg-clip-text text-transparent bg-gradient-to-r from-yellow-200 via-white to-yellow-200 ">
+              <em className="font-extralight italic  bg-clip-text text-transparent bg-gradient-to-r from-yellow-200 via-white to-yellow-200 ">
                 Vulnerabilities
               </em>
             </div>
