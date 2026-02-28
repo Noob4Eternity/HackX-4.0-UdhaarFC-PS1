@@ -202,7 +202,7 @@ export default function RemediationPage() {
                 <Wrench className="h-6 w-6 text-purple-400" />
                 Remediation Hub
               </h1>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 italic">
                 AI-powered fix suggestions for all detected vulnerabilities
               </p>
             </div>

@@ -148,7 +148,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="p-6 space-y-6">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground italic">
                 Generate API keys to integrate VibeCheck Security into your CI/CD pipeline.
               </p>
               <div className="p-4 bg-muted/20 rounded-lg border border-border/50">

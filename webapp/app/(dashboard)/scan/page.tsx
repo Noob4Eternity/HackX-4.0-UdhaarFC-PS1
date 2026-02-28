@@ -162,7 +162,7 @@ export default function ScanPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">GitHub Repository</h3>
-                      <p className="text-sm text-muted-foreground">Paste your repository URL</p>
+                      <p className="text-sm text-muted-foreground italic">Paste your repository URL</p>
                     </div>
                   </div>
 

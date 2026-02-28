@@ -93,7 +93,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">{mockScanResult.repoName}</h1>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <p className="text-sm text-muted-foreground italic flex items-center gap-2">
                 {mockScanResult.filesScanned} files scanned
                 <span className="text-border">|</span>
                 {new Date(mockScanResult.scanDate).toLocaleDateString('en-US', {
@@ -278,7 +278,7 @@ export default function DashboardPage() {
               <FileText className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold text-foreground">Most Dangerous Files</h3>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Files with the highest risk scores requiring immediate attention</p>
+            <p className="text-sm text-muted-foreground mt-1 italic">Files with the highest risk scores requiring immediate attention</p>
           </div>
           
           <Table>
