@@ -14,6 +14,7 @@ import {
   Settings
 } from 'lucide-react';
 import { Logo } from './logo';
+import { RepoList } from './repo-list';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ export function Sidebar() {
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="p-4 space-y-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -67,6 +68,11 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* GitHub Repositories */}
+      <div className="flex-1 min-h-0 border-t border-sidebar-border/40">
+        <RepoList collapsed={collapsed} />
+      </div>
 
       <div className="p-4 border-t border-sidebar-border space-y-2">
         <Button
