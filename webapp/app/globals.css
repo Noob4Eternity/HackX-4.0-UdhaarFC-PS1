@@ -5,24 +5,24 @@
 
 /* VibeCheck Security - Cybersecurity Dark Theme */
 :root {
-  --background: oklch(0.08 0.01 250);
+  --background: oklch(0.13 0.008 260);
   --foreground: oklch(0.95 0.01 250);
-  --card: oklch(0.12 0.015 250);
+  --card: oklch(0.16 0.01 260);
   --card-foreground: oklch(0.95 0.01 250);
-  --popover: oklch(0.1 0.015 250);
+  --popover: oklch(0.14 0.01 260);
   --popover-foreground: oklch(0.95 0.01 250);
   --primary: oklch(0.7 0.18 200);
-  --primary-foreground: oklch(0.08 0.01 250);
+  --primary-foreground: oklch(0.1 0.01 260);
   --secondary: oklch(0.5 0.2 280);
   --secondary-foreground: oklch(0.95 0.01 250);
-  --muted: oklch(0.18 0.015 250);
+  --muted: oklch(0.2 0.012 260);
   --muted-foreground: oklch(0.65 0.02 250);
   --accent: oklch(0.6 0.22 200);
-  --accent-foreground: oklch(0.08 0.01 250);
+  --accent-foreground: oklch(0.1 0.01 260);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.95 0.01 250);
-  --border: oklch(0.22 0.02 250);
-  --input: oklch(0.15 0.015 250);
+  --border: oklch(0.24 0.015 260);
+  --input: oklch(0.17 0.01 260);
   --ring: oklch(0.7 0.18 200);
   --chart-1: oklch(0.7 0.18 200);
   --chart-2: oklch(0.55 0.2 280);
@@ -30,13 +30,13 @@
   --chart-4: oklch(0.7 0.2 60);
   --chart-5: oklch(0.6 0.22 25);
   --radius: 1rem;
-  --sidebar: oklch(0.06 0.01 250);
+  --sidebar: oklch(0.11 0.008 260);
   --sidebar-foreground: oklch(0.95 0.01 250);
   --sidebar-primary: oklch(0.7 0.18 200);
-  --sidebar-primary-foreground: oklch(0.08 0.01 250);
-  --sidebar-accent: oklch(0.15 0.02 250);
+  --sidebar-primary-foreground: oklch(0.1 0.01 260);
+  --sidebar-accent: oklch(0.18 0.012 260);
   --sidebar-accent-foreground: oklch(0.95 0.01 250);
-  --sidebar-border: oklch(0.2 0.02 250);
+  --sidebar-border: oklch(0.22 0.015 260);
   --sidebar-ring: oklch(0.7 0.18 200);
   
   /* Custom colors for VibeCheck */
@@ -50,43 +50,43 @@
 }
 
 .dark {
-  --background: oklch(0.08 0.01 250);
+  --background: oklch(0.13 0.008 260);
   --foreground: oklch(0.95 0.01 250);
-  --card: oklch(0.12 0.015 250);
+  --card: oklch(0.16 0.01 260);
   --card-foreground: oklch(0.95 0.01 250);
-  --popover: oklch(0.1 0.015 250);
+  --popover: oklch(0.14 0.01 260);
   --popover-foreground: oklch(0.95 0.01 250);
   --primary: oklch(0.7 0.18 200);
-  --primary-foreground: oklch(0.08 0.01 250);
+  --primary-foreground: oklch(0.1 0.01 260);
   --secondary: oklch(0.5 0.2 280);
   --secondary-foreground: oklch(0.95 0.01 250);
-  --muted: oklch(0.18 0.015 250);
+  --muted: oklch(0.2 0.012 260);
   --muted-foreground: oklch(0.65 0.02 250);
   --accent: oklch(0.6 0.22 200);
-  --accent-foreground: oklch(0.08 0.01 250);
+  --accent-foreground: oklch(0.1 0.01 260);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.95 0.01 250);
-  --border: oklch(0.22 0.02 250);
-  --input: oklch(0.15 0.015 250);
+  --border: oklch(0.24 0.015 260);
+  --input: oklch(0.17 0.01 260);
   --ring: oklch(0.7 0.18 200);
   --chart-1: oklch(0.7 0.18 200);
   --chart-2: oklch(0.55 0.2 280);
   --chart-3: oklch(0.75 0.2 145);
   --chart-4: oklch(0.7 0.2 60);
   --chart-5: oklch(0.6 0.22 25);
-  --sidebar: oklch(0.06 0.01 250);
+  --sidebar: oklch(0.11 0.008 260);
   --sidebar-foreground: oklch(0.95 0.01 250);
   --sidebar-primary: oklch(0.7 0.18 200);
-  --sidebar-primary-foreground: oklch(0.08 0.01 250);
-  --sidebar-accent: oklch(0.15 0.02 250);
+  --sidebar-primary-foreground: oklch(0.1 0.01 260);
+  --sidebar-accent: oklch(0.18 0.012 260);
   --sidebar-accent-foreground: oklch(0.95 0.01 250);
-  --sidebar-border: oklch(0.2 0.02 250);
+  --sidebar-border: oklch(0.22 0.015 260);
   --sidebar-ring: oklch(0.7 0.18 200);
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-sans: var(--font-roboto), 'Roboto', sans-serif;
+  --font-mono: var(--font-roboto-mono), 'Roboto Mono', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -142,7 +142,7 @@
   }
 }
 
-/* Custom glassmorphism and glow effects */
+/* Custom glassmorphism */
 .glass {
   background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
   backdrop-filter: blur(12px);
@@ -152,9 +152,10 @@
 .glass-card {
   background: linear-gradient(135deg, rgba(20,30,50,0.8) 0%, rgba(15,20,35,0.9) 100%);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(100,200,255,0.1);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
+/* Glow effects */
 .glow-cyan {
   box-shadow: 0 0 20px rgba(0, 200, 255, 0.15), 0 0 40px rgba(0, 200, 255, 0.05);
 }
@@ -167,42 +168,22 @@
   text-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
 }
 
-.gradient-border {
-  position: relative;
-}
-
-.gradient-border::before {
+/* Noise overlay */
+body::after {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
-  padding: 1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(0,200,255,0.3) 0%, rgba(140,100,255,0.3) 100%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  z-index: 50;
   pointer-events: none;
-}
-
-.animated-bg {
-  background: radial-gradient(ellipse at 20% 20%, rgba(0,200,255,0.08) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 80%, rgba(140,100,255,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 50%, rgba(0,200,255,0.03) 0%, transparent 70%);
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 512px 512px;
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .animate-float {

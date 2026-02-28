@@ -25,14 +25,13 @@ export function Logo({ size = 'md', showText = true }: LogoProps) {
       transition={{ duration: 0.3 }}
     >
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 blur-lg opacity-50" />
-        <div className="relative bg-gradient-to-r from-cyan-500 to-purple-500 p-2 rounded-lg">
+        <div className="relative bg-cyan-600 p-2 rounded-lg">
           <Shield size={icon} className="text-background" />
         </div>
       </div>
       {showText && (
         <div className="flex flex-col">
-          <span className={`font-bold ${text} bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent`}>
+          <span className={`font-bold ${text} text-foreground italic`}>
             VibeCheck
           </span>
           <span className="text-xs text-muted-foreground -mt-1">Security</span>

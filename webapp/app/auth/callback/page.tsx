@@ -33,7 +33,7 @@ function AuthCallbackContent() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center animated-bg">
+    <div className="min-h-screen flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -96,7 +96,7 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center animated-bg">
+        <div className="min-h-screen flex items-center justify-center">
           <Loader2 className="h-12 w-12 text-primary animate-spin" />
         </div>
       }

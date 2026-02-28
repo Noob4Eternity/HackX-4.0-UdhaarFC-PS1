@@ -1,26 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Github,
-  Upload,
-  Scan,
-  FileArchive,
-  ArrowRight,
-  Loader2,
-  Sparkles
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Navbar } from '@/components/vibecheck/navbar';
-import { RepoGrid } from '@/components/vibecheck/repo-grid';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { Github, Upload, Scan, FileArchive, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Navbar } from "@/components/vibecheck/navbar";
+import { RepoGrid } from "@/components/vibecheck/repo-grid";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function ScanPage() {
-  const [repoUrl, setRepoUrl] = useState('');
+  const [repoUrl, setRepoUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -29,7 +21,7 @@ export default function ScanPage() {
 
   const handleScan = async () => {
     if (!repoUrl && !uploadedFile) {
-      toast.error('Please enter a repository URL or upload a ZIP file');
+      toast.error("Please enter a repository URL or upload a ZIP file");
       return;
     }
 
@@ -38,7 +30,7 @@ export default function ScanPage() {
 
     // Simulate scan progress
     const interval = setInterval(() => {
-      setScanProgress(prev => {
+      setScanProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           return 100;
@@ -51,8 +43,8 @@ export default function ScanPage() {
     setTimeout(() => {
       clearInterval(interval);
       setScanProgress(100);
-      toast.success('Scan complete!');
-      router.push('/dashboard');
+      toast.success("Scan complete!");
+      router.push("/dashboard");
     }, 3000);
   };
 
@@ -69,14 +61,14 @@ export default function ScanPage() {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].name.endsWith('.zip')) {
+    if (files.length > 0 && files[0].name.endsWith(".zip")) {
       setUploadedFile(files[0]);
-      setRepoUrl('');
+      setRepoUrl("");
       toast.success(`File "${files[0].name}" ready for scanning`);
     } else {
-      toast.error('Please upload a ZIP file');
+      toast.error("Please upload a ZIP file");
     }
   }, []);
 
@@ -84,7 +76,7 @@ export default function ScanPage() {
     const files = e.target.files;
     if (files && files.length > 0) {
       setUploadedFile(files[0]);
-      setRepoUrl('');
+      setRepoUrl("");
       toast.success(`File "${files[0].name}" ready for scanning`);
     }
   };
@@ -92,26 +84,26 @@ export default function ScanPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar title="New Scan" />
-      
-      <div className="flex-1 p-6 lg:p-8 animated-bg">
+
+      <div className="flex-1 p-6 lg:p-8">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
-          >
+            className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm mb-6">
               <Sparkles className="h-4 w-4" />
               <span>AI-Powered Security Analysis</span>
             </div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4 text-balance">
-              Scan Your Codebase for{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            <div className="text-4xl lg:text-5xl font-light text-foreground mb-4 font-[family-name:var(--font-playfair)]">
+              Scan Your Codebase for
+              <br />
+              <em className="font-extralight italic text-lilac/80 bg-clip-text text-transparent bg-gradient-to-r from-yellow-200 via-white to-yellow-200 ">
                 Vulnerabilities
-              </span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+              </em>
+            </div>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty italic leading-tight">
               Get instant AI-powered vulnerability analysis with actionable remediation suggestions.
               Submit a GitHub repository URL or upload your code as a ZIP file.
             </p>
@@ -125,32 +117,30 @@ export default function ScanPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="glass-card rounded-2xl p-8 glow-cyan text-center"
-              >
+                className="glass-card rounded-2xl p-8 glow-cyan text-center">
                 <div className="max-w-md mx-auto">
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    className="inline-flex p-4 rounded-full bg-primary/10 mb-6"
-                  >
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="inline-flex p-4 rounded-full bg-primary/10 mb-6">
                     <Loader2 className="h-12 w-12 text-primary" />
                   </motion.div>
-                  
+
                   <h2 className="text-2xl font-bold text-foreground mb-2">Scanning in Progress</h2>
                   <p className="text-muted-foreground mb-6">
                     Analyzing {uploadedFile ? uploadedFile.name : repoUrl}
                   </p>
-                  
+
                   {/* Progress bar */}
                   <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-4">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                      className="h-full bg-cyan-500"
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(scanProgress, 100)}%` }}
                       transition={{ duration: 0.3 }}
                     />
                   </div>
-                  
+
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Scanning files...</span>
                     <span>{Math.min(Math.round(scanProgress), 100)}%</span>
@@ -163,8 +153,7 @@ export default function ScanPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-6"
-              >
+                className="space-y-6">
                 {/* GitHub URL Input */}
                 <div className="glass-card rounded-2xl p-6 glow-cyan">
                   <div className="flex items-center gap-3 mb-4">
@@ -176,7 +165,7 @@ export default function ScanPage() {
                       <p className="text-sm text-muted-foreground">Paste your repository URL</p>
                     </div>
                   </div>
-                  
+
                   <Input
                     placeholder="https://github.com/username/repository"
                     value={repoUrl}
@@ -204,15 +193,14 @@ export default function ScanPage() {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={cn(
-                    'glass-card rounded-2xl p-8 border-2 border-dashed transition-all duration-300 cursor-pointer',
-                    isDragging 
-                      ? 'border-primary bg-primary/5 glow-cyan' 
-                      : uploadedFile 
-                        ? 'border-green-500/50 bg-green-500/5' 
-                        : 'border-border/50 hover:border-primary/50'
+                    "glass-card rounded-2xl p-8 border-2 border-dashed transition-all duration-300 cursor-pointer",
+                    isDragging
+                      ? "border-primary bg-primary/5"
+                      : uploadedFile
+                        ? "border-green-500/50 bg-green-500/5"
+                        : "border-border/50 hover:border-primary/50",
                   )}
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                >
+                  onClick={() => document.getElementById("file-upload")?.click()}>
                   <input
                     id="file-upload"
                     type="file"
@@ -220,29 +208,28 @@ export default function ScanPage() {
                     onChange={handleFileSelect}
                     className="hidden"
                   />
-                  
+
                   <div className="text-center">
                     <motion.div
                       animate={isDragging ? { scale: 1.1 } : { scale: 1 }}
                       className={cn(
-                        'inline-flex p-4 rounded-full mb-4',
-                        uploadedFile ? 'bg-green-500/10' : 'bg-primary/10'
-                      )}
-                    >
+                        "inline-flex p-4 rounded-full mb-4",
+                        uploadedFile ? "bg-green-500/10" : "bg-primary/10",
+                      )}>
                       {uploadedFile ? (
                         <FileArchive className="h-8 w-8 text-green-400" />
                       ) : (
                         <Upload className="h-8 w-8 text-primary" />
                       )}
                     </motion.div>
-                    
+
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {uploadedFile ? uploadedFile.name : 'Upload ZIP File'}
+                      {uploadedFile ? uploadedFile.name : "Upload ZIP File"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {uploadedFile 
-                        ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB ready for scanning` 
-                        : 'Drag and drop your ZIP file here, or click to browse'}
+                      {uploadedFile
+                        ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB ready for scanning`
+                        : "Drag and drop your ZIP file here, or click to browse"}
                     </p>
                   </div>
                 </div>
@@ -251,8 +238,7 @@ export default function ScanPage() {
                 <Button
                   onClick={handleScan}
                   disabled={!repoUrl && !uploadedFile}
-                  className="w-full h-14 text-lg bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-background font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-                >
+                  className="w-full h-14 text-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group">
                   <Scan className="mr-2 h-5 w-5" />
                   Start Security Scan
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

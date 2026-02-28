@@ -155,7 +155,7 @@ function VulnerabilityRow({ vulnerability, isExpanded, onToggle }: {
                       
                       <Button
                         onClick={handleFixWithChatGPT}
-                        className="gap-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-background"
+                        className="gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
                       >
                         Get AI-Powered Fix
                         <ExternalLink className="h-4 w-4" />

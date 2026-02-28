@@ -51,7 +51,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              <Button className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-background">
+              <Button className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10">
                 Save Changes
               </Button>
             </div>
@@ -162,7 +162,7 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               </div>
-              <Button className="gap-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-background">
+              <Button className="gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10">
                 <Key className="h-4 w-4" />
                 Generate New Key
               </Button>

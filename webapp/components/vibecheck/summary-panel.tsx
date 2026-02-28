@@ -78,8 +78,8 @@ export function SummaryPanel({ summary }: SummaryPanelProps) {
       transition={{ duration: 0.4, delay: 0.2 }}
       className="glass-card rounded-2xl overflow-hidden glow-purple"
     >
-      <div className="flex items-center gap-3 p-4 border-b border-border/50 bg-gradient-to-r from-purple-500/10 to-cyan-500/10">
-        <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500/20 to-cyan-500/20">
+      <div className="flex items-center gap-3 p-4 border-b border-border/50">
+        <div className="p-2 rounded-lg bg-muted/50">
           <Bot className="h-5 w-5 text-purple-400" />
         </div>
         <div>
