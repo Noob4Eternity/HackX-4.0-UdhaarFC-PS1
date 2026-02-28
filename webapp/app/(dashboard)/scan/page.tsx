@@ -3,23 +3,19 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Github, 
-  Upload, 
-  Scan, 
+import {
+  Github,
+  Upload,
+  Scan,
   FileArchive,
-  Clock,
   ArrowRight,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
   Loader2,
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Navbar } from '@/components/vibecheck/navbar';
-import { recentScans } from '@/lib/mock-data';
+import { RepoGrid } from '@/components/vibecheck/repo-grid';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -91,25 +87,6 @@ export default function ScanPage() {
       setRepoUrl('');
       toast.success(`File "${files[0].name}" ready for scanning`);
     }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'go':
-        return <CheckCircle2 className="h-4 w-4 text-green-400" />;
-      case 'conditional-go':
-        return <AlertTriangle className="h-4 w-4 text-yellow-400" />;
-      case 'no-go':
-        return <XCircle className="h-4 w-4 text-red-400" />;
-      default:
-        return null;
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 50) return 'text-yellow-400';
-    return 'text-red-400';
   };
 
   return (
@@ -284,75 +261,8 @@ export default function ScanPage() {
             )}
           </AnimatePresence>
 
-          {/* Recent Scans */}
-          {!isScanning && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-12"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  Recent Scans
-                </h2>
-                <Button variant="ghost" size="sm" className="text-primary">
-                  View All
-                </Button>
-              </div>
-              
-              <div className="grid gap-4">
-                {recentScans.map((scan, index) => (
-                  <motion.div
-                    key={scan.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    onClick={() => router.push('/dashboard')}
-                    className="glass-card rounded-xl p-4 hover:border-primary/30 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 rounded-lg bg-muted/50">
-                          <Github className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-                            {scan.repoName}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(scan.scanDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className={cn('text-xl font-bold', getScoreColor(scan.vibeScore))}>
-                            {scan.vibeScore}
-                          </div>
-                          <div className="text-xs text-muted-foreground">Score</div>
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/30">
-                          {getStatusIcon(scan.status)}
-                          <span className="text-sm capitalize">
-                            {scan.status.replace('-', ' ')}
-                          </span>
-                        </div>
-                        <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {/* Your Repositories */}
+          {!isScanning && <RepoGrid />}
         </div>
       </div>
     </div>

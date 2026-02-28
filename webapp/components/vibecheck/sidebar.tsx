@@ -70,7 +70,7 @@ export function Sidebar() {
       </nav>
 
       {/* GitHub Repositories */}
-      <div className="flex-1 min-h-0 border-t border-sidebar-border/40">
+      <div className="flex-1 min-h-0 overflow-hidden border-t border-sidebar-border/40">
         <RepoList collapsed={collapsed} />
       </div>
 
