@@ -36,6 +36,35 @@ _KNOWN_PATTERN_TYPES = frozenset({
     "PrivateKeyDetector",
 })
 
+# File patterns to ALWAYS exclude from secrets scanning.
+# These produce massive false positives (lock file hashes, placeholder keys, etc.)
+_SECRETS_EXCLUDE_PATTERNS = [
+    # Lock files — contain integrity hashes (SHA-512 base64), NOT secrets
+    r"pnpm-lock\.yaml$",
+    r"package-lock\.json$",
+    r"yarn\.lock$",
+    r"poetry\.lock$",
+    r"Pipfile\.lock$",
+    r"composer\.lock$",
+    r"-lock\.json$",           # catch-all: skills-lock.json, etc.
+    r"lock\.json$",            # any other lock files
+    r"\.lock$",                # generic lock files
+    # Template / example files — contain placeholder credentials
+    r"\.example$",
+    r"\.sample$",
+    r"\.template$",
+    r"\.env\.example$",
+    r"\.env\.sample$",
+    # Documentation — may reference key formats in examples
+    r"\.md$",
+    r"\.rst$",
+    # Mock / test data — intentionally contain fake secrets
+    r"mock[_-]",               # mock_data.ts, mock-findings.py
+    r"fixtures/",              # test fixtures
+    r"__tests__/",
+    r"__mocks__/",
+]
+
 
 def _severity_for(secret_type: str) -> Severity:
     """Map a detect-secrets type to a severity level.
@@ -102,11 +131,20 @@ class SecretsAnalyzer(BaseAnalyzer):
         else:
             cmd = ["detect-secrets", "scan", "--all-files"]
 
-        # Always add the safety-net regex (Layer 2)
+        # Build the exclude regex: directory excludes + file-pattern excludes
+        import re
+        exclude_parts = []
+
+        # Add directory excludes from config
         if config and config.get("exclude"):
-            import re
             escaped = [re.escape(x.rstrip("/")) for x in config["exclude"]]
-            regex = "^" + "/|^".join(escaped) + "/"
+            exclude_parts.extend([f"^{e}/" for e in escaped])
+
+        # Always add file-pattern excludes (lock files, templates, docs)
+        exclude_parts.extend(_SECRETS_EXCLUDE_PATTERNS)
+
+        if exclude_parts:
+            regex = "|".join(exclude_parts)
             cmd.extend(["--exclude-files", regex])
 
         cmd.append(".")
@@ -147,6 +185,16 @@ class SecretsAnalyzer(BaseAnalyzer):
             for secret in secret_list:
                 secret_type: str = secret.get("type", "Unknown")
                 line_number: int = secret.get("line_number", 0)
+
+                # Skip KeywordDetector hits in source code files.
+                # This detector flags ANY line containing words like
+                # "secret", "password", "token" — which triggers on enum
+                # definitions like `SECRET = "secret"` or mock data.
+                # NOTE: detect-secrets reports this as "Secret Keyword",
+                # not the class name "KeywordDetector".
+                if secret_type == "Secret Keyword" and filepath.endswith((".py", ".ts", ".tsx", ".js", ".jsx")):
+                    logger.debug("Skipping KeywordDetector FP in source: %s:%d", filepath, line_number)
+                    continue
                 severity = _severity_for(secret_type)
                 title = _title_for(secret_type)
 
