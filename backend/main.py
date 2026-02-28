@@ -84,3 +84,9 @@ async def auth_github_callback(body: OAuthCallbackRequest):
     except Exception as exc:
         logger.error("OAuth callback failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=502, detail="GitHub OAuth exchange failed")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
