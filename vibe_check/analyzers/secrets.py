@@ -111,16 +111,13 @@ class SecretsAnalyzer(BaseAnalyzer):
 
         cmd.append(".")
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=repo_path,
-            )
-            stdout, stderr = await proc.communicate()
+            from vibe_check.utils.subprocess import run as _run
+            proc = await _run(*cmd, cwd=repo_path)
         except Exception as exc:
             logger.warning("detect-secrets failed to launch: %s", exc)
             return []
+
+        stdout, stderr = proc.stdout, proc.stderr
 
         if proc.returncode != 0:
             logger.warning(

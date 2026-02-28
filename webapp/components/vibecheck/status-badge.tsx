@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatusBadgeProps {
-  status: 'go' | 'conditional-go' | 'no-go';
+  status: 'go' | 'no-go';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -16,12 +16,6 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
       icon: CheckCircle2,
       colors: 'bg-green-500/10 text-green-400 border-green-500/30',
       glow: 'shadow-green-500/20',
-    },
-    'conditional-go': {
-      label: 'CONDITIONAL GO',
-      icon: AlertTriangle,
-      colors: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
-      glow: 'shadow-yellow-500/20',
     },
     'no-go': {
       label: 'NO GO',

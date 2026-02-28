@@ -9,11 +9,22 @@ from __future__ import annotations
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Any
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-load_dotenv()
+# Load .env.local first (project convention), fall back to .env
+_backend_dir = Path(__file__).resolve().parent
+_env_local = _backend_dir / ".env.local"
+_env_default = _backend_dir / ".env"
+
+if _env_local.exists():
+    load_dotenv(_env_local)
+elif _env_default.exists():
+    load_dotenv(_env_default)
+else:
+    load_dotenv()  # walk up to find any .env
 
 logger = logging.getLogger("backend.database")
 

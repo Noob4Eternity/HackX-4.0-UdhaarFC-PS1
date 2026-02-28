@@ -13,6 +13,7 @@ import asyncio
 import json
 import logging
 import os
+import subprocess
 import re
 from pathlib import Path
 from typing import List, Optional
@@ -86,23 +87,24 @@ class ComplianceAnalyzer(BaseAnalyzer):
                 continue
 
             try:
-                proc = await asyncio.create_subprocess_exec(
+                from vibe_check.utils.subprocess import run as _run
+                proc = await _run(
                     "semgrep",
                     "--config", str(rule_path),
                     "--json",
                     "--quiet",
                     str(repo_path),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
+                    timeout=30,
                 )
-                stdout, stderr = await asyncio.wait_for(
-                    proc.communicate(), timeout=30
-                )
+                stdout, stderr = proc.stdout, proc.stderr
             except FileNotFoundError:
                 logger.warning("semgrep not installed — skipping compliance rules")
                 return []
-            except asyncio.TimeoutError:
+            except subprocess.TimeoutExpired:
                 logger.warning("semgrep timed out for %s", rule_file)
+                continue
+            except Exception as exc:
+                logger.warning("semgrep failed for %s: %s", rule_file, exc)
                 continue
 
             if not stdout:

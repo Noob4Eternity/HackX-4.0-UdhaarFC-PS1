@@ -12,7 +12,5 @@ export const config = {
     '/scan/:path*',
     '/dashboard/:path*',
     '/vulnerabilities/:path*',
-    '/remediation/:path*',
-    '/settings/:path*',
   ],
 };

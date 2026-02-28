@@ -8,10 +8,18 @@ import logging
 import os
 import uuid
 
+from pathlib import Path
+
 from dotenv import load_dotenv
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
-load_dotenv()
+# Load .env.local first (project convention), fall back to .env
+_backend_dir = Path(__file__).resolve().parent.parent
+_env_local = _backend_dir / ".env.local"
+if _env_local.exists():
+    load_dotenv(_env_local)
+else:
+    load_dotenv()
 
 from backend.services import repo_cloner, scan_runner
 from backend.state import SCAN_STATUS

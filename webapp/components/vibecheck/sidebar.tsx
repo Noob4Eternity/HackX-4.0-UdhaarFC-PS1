@@ -7,14 +7,11 @@ import {
   LayoutDashboard,
   Scan,
   AlertTriangle,
-  Wrench,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Settings
 } from 'lucide-react';
 import { Logo } from './logo';
-import { RepoList } from './repo-list';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -30,7 +27,6 @@ const navItems = [
   { href: '/scan', label: 'Scan', icon: Scan },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/vulnerabilities', label: 'Vulnerabilities', icon: AlertTriangle },
-  { href: '/remediation', label: 'Remediation Hub', icon: Wrench },
 ];
 
 function NavLink({
@@ -118,15 +114,8 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Repo list — hidden when collapsed */}
-        {!collapsed && (
-          <div className="flex-1 min-h-0 overflow-hidden border-t border-sidebar-border/40">
-            <RepoList collapsed={false} />
-          </div>
-        )}
-
-        {/* Spacer when collapsed (pushes footer down) */}
-        {collapsed && <div className="flex-1" />}
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Footer */}
         <div className={cn('p-3 border-t border-sidebar-border space-y-1', collapsed && 'px-2')}>
@@ -144,21 +133,6 @@ export function Sidebar() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>Expand sidebar</TooltipContent>
-              </Tooltip>
-
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Link href="/settings" className="block">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-full h-10 text-muted-foreground hover:text-foreground"
-                    >
-                      <Settings size={18} />
-                    </Button>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>Settings</TooltipContent>
               </Tooltip>
 
               <Tooltip delayDuration={0}>
@@ -182,17 +156,6 @@ export function Sidebar() {
                   {user.email}
                 </div>
               )}
-
-              <Link href="/settings" className="block">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-                >
-                  <Settings size={18} />
-                  <span>Settings</span>
-                </Button>
-              </Link>
 
               <Button
                 variant="ghost"

@@ -1,19 +1,19 @@
 import type { Metadata, Viewport } from 'next'
-import { Roboto, Roboto_Mono, Playfair_Display } from 'next/font/google'
+import { Geist, Geist_Mono } from 'next/font/google'
+import { Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { SessionProvider } from '@/components/providers/session-provider'
 import './globals.css'
 
-const roboto = Roboto({
+const geistSans = Geist({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '700', '900'],
-  variable: '--font-roboto',
+  variable: '--font-geist-sans',
 })
 
-const robotoMono = Roboto_Mono({
+const geistMono = Geist_Mono({
   subsets: ['latin'],
-  variable: '--font-roboto-mono',
+  variable: '--font-geist-mono',
 })
 
 const playfair = Playfair_Display({
@@ -41,7 +41,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${roboto.variable} ${robotoMono.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} font-sans font-light antialiased`}>
         <SessionProvider>
         {children}
         <Toaster 

@@ -22,7 +22,7 @@ function CodeSnippet() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6, duration: 0.5 }}
-      className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-muted/40 backdrop-blur-sm px-5 py-3 font-[family-name:var(--font-roboto-mono)] text-sm">
+      className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-muted/40 backdrop-blur-sm px-5 py-3 font-[family-name:var(--font-geist-mono)] text-sm">
       <Terminal
         size={14}
         className="text-muted-foreground shrink-0"
@@ -100,7 +100,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 italic leading-relaxed font-extralight">
+          className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed font-extralight *:">
           AI-powered vulnerability scanning from your terminal. Find issues before they find you.
         </motion.p>
 

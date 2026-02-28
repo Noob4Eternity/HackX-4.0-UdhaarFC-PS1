@@ -87,7 +87,7 @@ export function SummaryPanel({ summary }: SummaryPanelProps) {
             AI Security Summary
             <Sparkles className="h-4 w-4 text-purple-400" />
           </h3>
-          <p className="text-xs text-muted-foreground italic">Powered by VibeCheck AI Engine</p>
+          <p className="text-xs text-muted-foreground">Powered by VibeCheck AI Engine</p>
         </div>
       </div>
       
