@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/vibecheck/logo';
 import { useAuth } from '@/lib/auth-context';
+import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -44,14 +45,10 @@ export default function LoginPage() {
   const handleGithubLogin = async () => {
     setIsGithubLoading(true);
     try {
-      const success = await loginWithGithub();
-      if (success) {
-        toast.success('Authenticated with GitHub!');
-        router.push('/scan');
-      }
+      // Trigger real GitHub OAuth via NextAuth — this performs a full redirect
+      await signIn('github', { callbackUrl: '/scan' });
     } catch {
       toast.error('GitHub login failed. Please try again.');
-    } finally {
       setIsGithubLoading(false);
     }
   };

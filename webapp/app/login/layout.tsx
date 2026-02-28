@@ -5,5 +5,9 @@ export default function LoginLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <AuthProvider>
+      {children}
+    </AuthProvider>
+  );
 }

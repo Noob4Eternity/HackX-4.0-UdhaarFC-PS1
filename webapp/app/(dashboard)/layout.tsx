@@ -2,11 +2,14 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthProvider, useAuth } from '@/lib/auth-context';
+import { useSession } from 'next-auth/react';
+import { AuthProvider } from '@/lib/auth-context';
 import { Sidebar } from '@/components/vibecheck/sidebar';
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { data: session, status } = useSession();
+  const isLoading = status === 'loading';
+  const isAuthenticated = !!session;
   const router = useRouter();
 
   useEffect(() => {

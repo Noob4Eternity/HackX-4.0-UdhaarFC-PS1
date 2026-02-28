@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
+import { SessionProvider } from '@/components/providers/session-provider'
 import './globals.css'
 
 const geist = Geist({ 
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
+        <SessionProvider>
         {children}
         <Toaster 
           theme="dark" 
@@ -46,6 +48,7 @@ export default function RootLayout({
           }}
         />
         <Analytics />
+        </SessionProvider>
       </body>
     </html>
   )

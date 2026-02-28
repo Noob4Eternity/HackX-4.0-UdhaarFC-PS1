@@ -1,27 +1,12 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-*.egg
-dist/
-build/
-.eggs/
-
 # Dependencies
-**/node_modules/
+/node_modules
 /jspm_packages
-
-# next.js
-**/.next/
-/out/
-
-**/.agents/
 
 # Build artifacts
 /build
 /dist
 /out
-**/.next/
+.next/ # For Next.js projects
 
 # Logs and coverage
 logs
@@ -31,9 +16,14 @@ yarn-debug.log*
 yarn-error.log*
 /coverage
 
+# next.js
+/.next/
+/out/
+/.agents/
+
 # Environment variables
 .env
-**/.env.local
+.env.local
 .env.development.local
 .env.test.local
 .env.production.local
@@ -52,22 +42,3 @@ yarn-error.log*
 .vscode/            # VS Code folder (optional, if you have user-specific settings)
 *.swp
 .gitattributes
-
-# Environments
-.env
-.venv/
-*.env.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# vibe-audit runtime
-.vibeaudit.yml
-
-/testspackage-lock.json
