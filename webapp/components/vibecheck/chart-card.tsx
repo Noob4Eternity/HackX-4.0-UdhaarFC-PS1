@@ -25,7 +25,7 @@ export function ChartCard({ title, description, children, className }: ChartCard
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="text-sm text-muted-foreground mt-1 italic">{description}</p>
         )}
       </div>
       <div className="relative">

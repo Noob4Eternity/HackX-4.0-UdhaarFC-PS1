@@ -125,7 +125,7 @@ function RemediationCard({ suggestion, index, isApplied, onApply }: RemediationC
         <div className="flex items-center gap-3 pt-2">
           <Button
             onClick={handleFixWithChatGPT}
-            className="flex-1 gap-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-background"
+            className="flex-1 gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
           >
             Fix with ChatGPT
             <ExternalLink className="h-4 w-4" />
@@ -202,7 +202,7 @@ export default function RemediationPage() {
                 <Wrench className="h-6 w-6 text-purple-400" />
                 Remediation Hub
               </h1>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 italic">
                 AI-powered fix suggestions for all detected vulnerabilities
               </p>
             </div>
@@ -217,7 +217,7 @@ export default function RemediationPage() {
               
               <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                  className="h-full bg-cyan-500"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5 }}
@@ -227,7 +227,7 @@ export default function RemediationPage() {
               <Button
                 onClick={handleApplyAll}
                 disabled={isApplyingAll || appliedCount === totalCount}
-                className="gap-2 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-400 hover:to-cyan-400 text-background"
+                className="gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
               >
                 {isApplyingAll ? (
                   <motion.div

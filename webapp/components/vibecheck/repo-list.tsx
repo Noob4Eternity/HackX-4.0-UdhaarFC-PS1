@@ -128,7 +128,7 @@ export function RepoList({ collapsed }: RepoListProps) {
   }
 
   return (
-    <div className="flex flex-col min-h-0">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Section header */}
       <div className="flex items-center justify-between px-3 pt-3 pb-1.5">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
@@ -168,7 +168,7 @@ export function RepoList({ collapsed }: RepoListProps) {
 
       {/* Repo list with scroll */}
       {!isLoading && !error && repos.length > 0 && (
-        <ScrollArea className="flex-1 max-h-[calc(100vh-420px)]">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="px-1 py-1 space-y-0.5">
             {repos.map((repo, i) => (
               <RepoItemRow

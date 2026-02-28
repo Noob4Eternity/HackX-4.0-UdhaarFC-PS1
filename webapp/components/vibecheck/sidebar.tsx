@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  Scan, 
-  AlertTriangle, 
-  Wrench, 
+import {
+  LayoutDashboard,
+  Scan,
+  AlertTriangle,
+  Wrench,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -19,6 +19,12 @@ import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const navItems = [
   { href: '/scan', label: 'Scan', icon: Scan },
@@ -27,96 +33,180 @@ const navItems = [
   { href: '/remediation', label: 'Remediation Hub', icon: Wrench },
 ];
 
+function NavLink({
+  item,
+  isActive,
+  collapsed,
+}: {
+  item: (typeof navItems)[0];
+  isActive: boolean;
+  collapsed: boolean;
+}) {
+  const inner = (
+    <Link href={item.href}>
+      <motion.div
+        whileHover={{ x: collapsed ? 0 : 4 }}
+        className={cn(
+          'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+          collapsed && 'justify-center px-3',
+          isActive
+            ? 'bg-sidebar-primary text-sidebar-primary-foreground glow-cyan'
+            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+        )}
+      >
+        <item.icon size={20} className="shrink-0" />
+        {!collapsed && <span className="font-medium">{item.label}</span>}
+      </motion.div>
+    </Link>
+  );
+
+  if (collapsed) {
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>{inner}</TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return inner;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className={cn(
-        'h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300',
-        collapsed ? 'w-20' : 'w-64'
-      )}
-    >
-      <div className="p-4 border-b border-sidebar-border">
-        <Link href="/scan">
-          <Logo size={collapsed ? 'sm' : 'md'} showText={!collapsed} />
-        </Link>
-      </div>
+    <TooltipProvider>
+      <motion.aside
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className={cn(
+          'h-screen sticky top-0 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300',
+          collapsed ? 'w-[68px]' : 'w-64'
+        )}
+      >
+        {/* Logo + collapse toggle */}
+        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+          <Link href="/scan">
+            <Logo size={collapsed ? 'sm' : 'md'} showText={!collapsed} />
+          </Link>
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCollapsed(true)}
+              className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
+            >
+              <ChevronLeft size={16} />
+            </Button>
+          )}
+        </div>
 
-      <nav className="p-4 space-y-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link key={item.href} href={item.href}>
-              <motion.div
-                whileHover={{ x: 4 }}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-                  isActive
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground glow-cyan'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                )}
-              >
-                <item.icon size={20} />
-                {!collapsed && <span className="font-medium">{item.label}</span>}
-              </motion.div>
-            </Link>
-          );
-        })}
-      </nav>
+        {/* Navigation */}
+        <nav className={cn('p-3 space-y-1', collapsed && 'px-2')}>
+          {navItems.map((item) => (
+            <NavLink
+              key={item.href}
+              item={item}
+              isActive={pathname === item.href}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
 
-      {/* GitHub Repositories */}
-      <div className="flex-1 min-h-0 border-t border-sidebar-border/40">
-        <RepoList collapsed={collapsed} />
-      </div>
-
-      <div className="p-4 border-t border-sidebar-border space-y-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full justify-center text-muted-foreground hover:text-foreground"
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </Button>
-
-        {!collapsed && user && (
-          <div className="px-4 py-2 text-sm text-muted-foreground truncate">
-            {user.email}
+        {/* Repo list — hidden when collapsed */}
+        {!collapsed && (
+          <div className="flex-1 min-h-0 overflow-hidden border-t border-sidebar-border/40">
+            <RepoList collapsed={false} />
           </div>
         )}
 
-        <Link href="/settings" className="block">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              'w-full justify-start gap-3 text-muted-foreground hover:text-foreground',
-              collapsed && 'justify-center'
-            )}
-          >
-            <Settings size={18} />
-            {!collapsed && <span>Settings</span>}
-          </Button>
-        </Link>
+        {/* Spacer when collapsed (pushes footer down) */}
+        {collapsed && <div className="flex-1" />}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={logout}
-          className={cn(
-            'w-full justify-start gap-3 text-muted-foreground hover:text-red-400',
-            collapsed && 'justify-center'
+        {/* Footer */}
+        <div className={cn('p-3 border-t border-sidebar-border space-y-1', collapsed && 'px-2')}>
+          {collapsed ? (
+            <>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCollapsed(false)}
+                    className="w-full h-10 text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight size={18} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>Expand sidebar</TooltipContent>
+              </Tooltip>
+
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Link href="/settings" className="block">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-full h-10 text-muted-foreground hover:text-foreground"
+                    >
+                      <Settings size={18} />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>Settings</TooltipContent>
+              </Tooltip>
+
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={logout}
+                    className="w-full h-10 text-muted-foreground hover:text-red-400"
+                  >
+                    <LogOut size={18} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>Logout</TooltipContent>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              {user && (
+                <div className="px-3 py-2 text-sm text-muted-foreground truncate">
+                  {user.email}
+                </div>
+              )}
+
+              <Link href="/settings" className="block">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+                >
+                  <Settings size={18} />
+                  <span>Settings</span>
+                </Button>
+              </Link>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={logout}
+                className="w-full justify-start gap-3 text-muted-foreground hover:text-red-400"
+              >
+                <LogOut size={18} />
+                <span>Logout</span>
+              </Button>
+            </>
           )}
-        >
-          <LogOut size={18} />
-          {!collapsed && <span>Logout</span>}
-        </Button>
-      </div>
-    </motion.aside>
+        </div>
+      </motion.aside>
+    </TooltipProvider>
   );
 }

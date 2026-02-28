@@ -54,28 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden animated-bg">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl"
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ top: '10%', left: '10%' }}
-        />
-        <motion.div
-          className="absolute w-80 h-80 rounded-full bg-purple-500/10 blur-3xl"
-          animate={{
-            x: [0, -80, 0],
-            y: [0, 60, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ bottom: '20%', right: '15%' }}
-        />
-      </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
 
       {/* Login Card */}
       <motion.div
@@ -84,11 +63,11 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="relative w-full max-w-md mx-4"
       >
-        <div className="glass-card rounded-2xl p-8 glow-cyan gradient-border">
+        <div className="glass-card rounded-2xl p-8 glow-cyan">
           {/* Logo and Header */}
           <div className="flex flex-col items-center mb-8">
             <Logo size="lg" />
-            <p className="text-muted-foreground mt-2 text-center">
+            <p className="text-muted-foreground mt-2 text-center italic">
               AI-powered vulnerability intelligence for your codebase
             </p>
           </div>
@@ -139,7 +118,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-background font-semibold transition-all duration-300 group"
+              className="w-full h-12 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 font-semibold transition-all duration-300 group"
             >
               {isLoading ? (
                 <motion.div
