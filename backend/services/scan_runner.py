@@ -42,6 +42,7 @@ async def run_scan(
         from vibe_check.analyzers.compliance import ComplianceAnalyzer
         from vibe_check.analyzers.prompt_injection import PromptInjectionAnalyzer
         from vibe_check.analyzers.cost import CostAnalyzer
+        from vibe_check.analyzers.nextjs import NextJSAnalyzer
         from vibe_check.analyzers.llm_summarizer import LLMSummarizer
 
         analyzers = [
@@ -52,6 +53,8 @@ async def run_scan(
             CostAnalyzer(),
             ComplianceAnalyzer(),
             PromptInjectionAnalyzer(),
+            CostAnalyzer(),
+            NextJSAnalyzer(),
             LLMSummarizer(),
         ]
 

@@ -1,30 +1,27 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Scan,
+  AlertTriangle,
   LogOut,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
-import { Logo } from './logo';
-import { useAuth } from '@/lib/auth-context';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "lucide-react";
+import { Logo } from "./logo";
+import { useAuth } from "@/lib/auth-context";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Kbd } from "@/components/ui/kbd";
 
 const navItems = [
-  { href: '/scan', label: 'Scan', icon: Scan },
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: "/scan", label: "Scan", icon: Scan },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
 function NavLink({
@@ -41,14 +38,16 @@ function NavLink({
       <motion.div
         whileHover={{ x: collapsed ? 0 : 4 }}
         className={cn(
-          'flex items-center gap-3 px-4 py-3 rounded-none transition-all border-l-2',
-          collapsed ? 'justify-center px-3' : '',
+          "flex items-center gap-3 px-4 py-3 rounded-none transition-all border-l-2",
+          collapsed ? "justify-center px-3" : "",
           isActive
-            ? 'border-primary bg-primary/10 text-primary glow-cyan'
-            : 'border-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-        )}
-      >
-        <item.icon size={20} className="shrink-0" />
+            ? "border-primary bg-primary/10 text-primary glow-cyan"
+            : "border-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        )}>
+        <item.icon
+          size={20}
+          className="shrink-0"
+        />
         {!collapsed && <span className="font-medium tracking-wide">{item.label}</span>}
       </motion.div>
     </Link>
@@ -58,7 +57,9 @@ function NavLink({
     return (
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>{inner}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8}>
+        <TooltipContent
+          side="right"
+          sideOffset={8}>
           {item.label}
         </TooltipContent>
       </Tooltip>
@@ -73,35 +74,54 @@ export function Sidebar() {
   const { logout, user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
+  const toggleSidebar = useCallback(() => {
+    setCollapsed((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSidebar]);
+
   return (
     <TooltipProvider>
       <motion.aside
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         className={cn(
-          'h-screen sticky top-0 shrink-0 bg-sidebar border-r border-sidebar-border/50 flex flex-col transition-all duration-300',
-          collapsed ? 'w-[68px]' : 'w-64'
-        )}
-      >
+          "h-screen sticky top-0 shrink-0 bg-sidebar border-r border-sidebar-border/50 flex flex-col transition-all duration-300",
+          collapsed ? "w-[68px]" : "w-64",
+        )}>
         {/* Logo + collapse toggle */}
         <div className="p-4 border-b border-sidebar-border/50 flex items-center justify-between">
           <Link href="/scan">
-            <Logo size={collapsed ? 'sm' : 'md'} showText={!collapsed} />
+            <Logo
+              size={collapsed ? "sm" : "md"}
+              showText={!collapsed}
+            />
           </Link>
           {!collapsed && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCollapsed(true)}
-              className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
-            >
-              <ChevronLeft size={16} />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Kbd className="text-[10px] text-muted-foreground/60">Alt+S</Kbd>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCollapsed(true)}
+                className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0">
+                <ChevronLeft size={16} />
+              </Button>
+            </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className={cn('p-3 space-y-1', collapsed && 'px-2')}>
+        <nav className={cn("p-3 space-y-1", collapsed && "px-2")}>
           {navItems.map((item) => (
             <NavLink
               key={item.href}
@@ -116,7 +136,7 @@ export function Sidebar() {
         <div className="flex-1" />
 
         {/* Footer */}
-        <div className={cn('p-3 border-t border-sidebar-border/50 space-y-1', collapsed && 'px-2')}>
+        <div className={cn("p-3 border-t border-sidebar-border/50 space-y-1", collapsed && "px-2")}>
           {collapsed ? (
             <>
               <Tooltip delayDuration={0}>
@@ -125,12 +145,16 @@ export function Sidebar() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setCollapsed(false)}
-                    className="w-full h-10 text-muted-foreground hover:text-foreground"
-                  >
+                    className="w-full h-10 text-muted-foreground hover:text-foreground">
                     <ChevronRight size={18} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>Expand sidebar</TooltipContent>
+                <TooltipContent
+                  side="right"
+                  sideOffset={8}
+                  className="flex items-center gap-2">
+                  Expand <Kbd>Alt+S</Kbd>
+                </TooltipContent>
               </Tooltip>
 
               <Tooltip delayDuration={0}>
@@ -139,28 +163,28 @@ export function Sidebar() {
                     variant="ghost"
                     size="icon"
                     onClick={logout}
-                    className="w-full h-10 text-muted-foreground hover:text-red-400"
-                  >
+                    className="w-full h-10 text-muted-foreground hover:text-red-400">
                     <LogOut size={18} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>Logout</TooltipContent>
+                <TooltipContent
+                  side="right"
+                  sideOffset={8}>
+                  Logout
+                </TooltipContent>
               </Tooltip>
             </>
           ) : (
             <>
               {user && (
-                <div className="px-3 py-2 text-sm text-muted-foreground truncate">
-                  {user.email}
-                </div>
+                <div className="px-3 py-2 text-sm text-muted-foreground truncate">{user.email}</div>
               )}
 
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={logout}
-                className="w-full justify-start gap-3 text-muted-foreground hover:text-red-400"
-              >
+                className="w-full justify-start gap-3 text-muted-foreground hover:text-red-400">
                 <LogOut size={18} />
                 <span>Logout</span>
               </Button>

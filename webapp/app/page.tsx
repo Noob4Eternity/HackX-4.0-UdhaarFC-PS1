@@ -3,7 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Shield, ArrowRight, Copy, Check, Terminal, Sparkles } from "lucide-react";
+import {
+  Shield,
+  ArrowRight,
+  Copy,
+  Check,
+  Terminal,
+  Sparkles,
+  KeyRound,
+  Bug,
+  Package,
+  Scale,
+  Bot,
+  DollarSign,
+  GitPullRequest,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LightRays } from "@/components/ui/light-rays";
 
@@ -140,6 +154,75 @@ export default function LandingPage() {
             </a>
           </Button>
         </motion.div>
+      </div>
+
+      {/* Features Section */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-6 mt-32 pb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-light text-foreground mb-4">
+            7 analyzers. One command.
+          </h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Comprehensive security analysis tailored for AI-generated and rapidly shipped codebases.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/30">
+          {[
+            {
+              icon: KeyRound,
+              title: "Secrets Detection",
+              desc: "Finds hardcoded API keys, tokens, and credentials before they leak.",
+            },
+            {
+              icon: Bug,
+              title: "SAST Analysis",
+              desc: "Static analysis with Bandit + Semgrep to catch SQL injection, shell injection, and more.",
+            },
+            {
+              icon: Package,
+              title: "Dependency Audit",
+              desc: "Detects hallucinated packages, typosquats, known CVEs, and outdated libraries.",
+            },
+            {
+              icon: Scale,
+              title: "Compliance Checks",
+              desc: "Automated GDPR and SOC 2 gap analysis using AST + LLM reasoning.",
+            },
+            {
+              icon: Bot,
+              title: "Prompt Injection",
+              desc: "Identifies unsanitized user input flowing into LLM API calls (OWASP LLM Top 10).",
+            },
+            {
+              icon: DollarSign,
+              title: "Cost Efficiency",
+              desc: "Flags expensive LLM models, over-provisioned infra, and bloated dependencies.",
+            },
+            {
+              icon: GitPullRequest,
+              title: "GitHub PR Integration",
+              desc: "Auto-comments on pull requests with GO/NO-GO verdicts and commit status checks.",
+            },
+          ].map((feature, i) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1 + i * 0.08, duration: 0.4 }}
+              className="bg-background/60 backdrop-blur-sm p-8 group"
+            >
+              <feature.icon className="h-6 w-6 text-primary mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="font-medium text-foreground mb-2">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   );

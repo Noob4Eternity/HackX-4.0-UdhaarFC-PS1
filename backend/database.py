@@ -138,6 +138,30 @@ async def get_scan(scan_id: str) -> dict | None:
             .execute()
         )
 
+        # Extract extra metadata from the full report JSON
+        report_json = row.get("report_json") or {}
+
+        # Enrich findings with extra fields from report_json if available
+        db_findings = findings_res.data or []
+        rj_findings = report_json.get("findings", [])
+
+        # Build a lookup of report_json findings by id for enrichment
+        rj_lookup: dict[str, dict] = {}
+        for rf in rj_findings:
+            fid = rf.get("id")
+            if fid:
+                rj_lookup[fid] = rf
+
+        enriched_findings = []
+        for f in db_findings:
+            fid = f.get("id", "")
+            rj = rj_lookup.get(fid, {})
+            # Add fields that may not be in the DB table
+            f.setdefault("cwe", rj.get("cwe"))
+            f.setdefault("confidence", rj.get("confidence"))
+            f.setdefault("compliance_ref", rj.get("compliance_ref"))
+            enriched_findings.append(f)
+
         return {
             "id": row["id"],
             "repo_name": row["repo_name"],
@@ -145,9 +169,15 @@ async def get_scan(scan_id: str) -> dict | None:
             "total_score": row["total_score"],
             "category_scores": row["category_scores_json"],
             "finding_count": row["finding_count"],
-            "findings": findings_res.data or [],
+            "findings": enriched_findings,
             "trigger_source": row["trigger_source"],
             "scanned_at": row["scanned_at"],
+            # Extra metadata from report_json
+            "grade": report_json.get("grade"),
+            "languages_detected": report_json.get("languages_detected", []),
+            "files_scanned": report_json.get("files_scanned"),
+            "scan_time": report_json.get("scan_time"),
+            "tokens_used": report_json.get("tokens_used"),
         }
 
     except Exception as e:
