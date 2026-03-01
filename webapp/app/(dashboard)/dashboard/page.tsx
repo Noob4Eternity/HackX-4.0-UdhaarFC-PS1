@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Github, AlertTriangle, FileText, Clock, ArrowRight } from 'lucide-react';
+import { Github, AlertTriangle, FileText, Clock, ArrowRight, Globe, Upload, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Navbar } from '@/components/vibecheck/navbar';
 import { ScoreIndicator } from '@/components/vibecheck/score-indicator';
@@ -131,11 +131,25 @@ function RecentScansView({ scans }: { scans: ReportSummary[] }) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-5">
                       <div className="p-2 rounded-none bg-muted/30">
-                        <Github className="h-5 w-5 text-muted-foreground" />
+                        {scan.trigger_source === 'zip' ? (
+                          <Upload className="h-5 w-5 text-muted-foreground" />
+                        ) : scan.trigger_source === 'oauth' ? (
+                          <Lock className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <Github className="h-5 w-5 text-muted-foreground" />
+                        )}
                       </div>
                       <div>
                         <h3 className="font-light text-lg text-foreground">{scan.repo_name}</h3>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                          {scan.trigger_source && (
+                            <span className="text-xs px-1.5 py-0.5 bg-muted/40 text-muted-foreground">
+                              {scan.trigger_source === 'url' ? 'Public' :
+                               scan.trigger_source === 'oauth' ? 'Private' :
+                               scan.trigger_source === 'zip' ? 'ZIP Upload' :
+                               scan.trigger_source}
+                            </span>
+                          )}
                           <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
                             {new Date(scan.scanned_at).toLocaleDateString('en-US', {
@@ -209,7 +223,7 @@ function ReportView({ report }: { report: Report }) {
           </div>
         </div>
 
-        <Button variant="outline" className="gap-2 shrink-0" asChild>
+        <Button variant="outline" className="gap-2 shrink-0 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50" asChild>
           <Link href={`/vulnerabilities?id=${report.id}`}>
             <AlertTriangle className="h-4 w-4" />
             View Vulnerabilities
@@ -455,11 +469,7 @@ export default function DashboardPage() {
       <div className="flex-1 p-8 lg:p-12">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full"
-            />
+            <div className="h-5 w-5 border border-muted-foreground/40 border-t-foreground/70 rounded-full animate-spin" />
           </div>
         ) : error ? (
           <div className="card-clean rounded-none p-12 text-center border-red-500/30">

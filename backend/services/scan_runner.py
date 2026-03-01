@@ -22,6 +22,7 @@ async def run_scan(
     repo_path: str,
     scan_id: str,
     trigger_source: str = "url",
+    display_name: str | None = None,
 ) -> None:
     """Run the full vibe_check analysis pipeline on *repo_path*.
 
@@ -70,6 +71,10 @@ async def run_scan(
         result = await orchestrator.run(repo_path)
 
         emit_progress(scan_id, "Analysis complete, saving results...", "saving", "start")
+
+        # ── Override repo_path with friendly display name ────────────
+        if display_name:
+            result.repo_path = display_name
 
         # ── Map verdict ─────────────────────────────────────────────
         verdict = "GO" if result.score >= FAIL_UNDER_SCORE else "NO-GO"

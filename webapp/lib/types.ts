@@ -30,6 +30,7 @@ export interface ReportSummary {
   total_score: number;
   finding_count: number;
   scanned_at: string;
+  trigger_source?: string;
 }
 
 export type Verdict = "GO" | "NO-GO";
