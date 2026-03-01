@@ -12,17 +12,7 @@ import typer
 from rich.console import Console
 
 from dotenv import load_dotenv
-
-# Load .env.local first (project convention), fall back to .env
-_root_dir = Path(__file__).resolve().parent.parent
-_env_local = _root_dir / "backend" / ".env.local"
-_env_default = _root_dir / "backend" / ".env"
-if _env_local.exists():
-    load_dotenv(_env_local)
-elif _env_default.exists():
-    load_dotenv(_env_default)
-else:
-    load_dotenv()
+load_dotenv()
 
 from vibe_check import __version__
 

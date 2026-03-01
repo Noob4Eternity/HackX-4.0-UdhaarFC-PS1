@@ -13,7 +13,6 @@ import asyncio
 import json
 import logging
 import re
-import subprocess
 from pathlib import Path
 from typing import List, Optional
 
@@ -104,17 +103,19 @@ class PromptInjectionAnalyzer(BaseAnalyzer):
         cmd.append(str(repo_path))
 
         try:
-            from vibe_check.utils.subprocess import run as _run
-            proc = await _run(*cmd, timeout=30)
-            stdout, stderr = proc.stdout, proc.stderr
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(), timeout=30
+            )
         except FileNotFoundError:
             logger.warning("semgrep not installed — skipping prompt injection rules")
             return []
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             logger.warning("semgrep timed out")
-            return []
-        except Exception as exc:
-            logger.warning("semgrep failed: %s", exc)
             return []
 
         if not stdout:

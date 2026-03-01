@@ -67,13 +67,15 @@ async def _run_bandit(repo_path: str, config: dict | None = None) -> List[Findin
             excludes = [x.rstrip("/") for x in config["exclude"]]
             cmd.extend(["-x", ",".join(excludes)])
     try:
-        from vibe_check.utils.subprocess import run as _run
-        proc = await _run(*cmd)
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
     except Exception as exc:
         logger.warning("bandit failed to launch: %s", exc)
         return []
-
-    stdout, stderr = proc.stdout, proc.stderr
 
     # Bandit returns exit-code 1 when it finds issues — that's expected.
     if proc.returncode not in (0, 1):
@@ -165,13 +167,15 @@ async def _run_semgrep(repo_path: str, config: dict | None = None) -> List[Findi
 
     cmd.append(repo_path)
     try:
-        from vibe_check.utils.subprocess import run as _run
-        proc = await _run(*cmd)
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
     except Exception as exc:
         logger.warning("semgrep failed to launch: %s", exc)
         return []
-
-    stdout, stderr = proc.stdout, proc.stderr
 
     # Semgrep exits with 1 when findings exist — that's fine.
     if proc.returncode not in (0, 1):

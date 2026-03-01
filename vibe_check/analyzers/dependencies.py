@@ -640,9 +640,14 @@ class DependencyAnalyzer(BaseAnalyzer):
         """Run `npm audit --json` and convert to Findings."""
         findings: List[Finding] = []
         try:
-            from vibe_check.utils.subprocess import run as _run
-            proc = await _run("npm", "audit", "--json", cwd=str(root), timeout=30)
-            data = json.loads(proc.stdout.decode("utf-8", errors="replace"))
+            proc = await asyncio.create_subprocess_exec(
+                "npm", "audit", "--json",
+                cwd=str(root),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
+            data = json.loads(stdout.decode("utf-8", errors="replace"))
 
             # npm audit v7+ format: { vulnerabilities: { package: { ... } } }
             vulns = data.get("vulnerabilities", {})
@@ -723,9 +728,14 @@ class DependencyAnalyzer(BaseAnalyzer):
             args.append("--desc")
 
         try:
-            from vibe_check.utils.subprocess import run as _run
-            proc = await _run(*args, cwd=str(root), timeout=30)
-            data = json.loads(proc.stdout.decode("utf-8", errors="replace"))
+            proc = await asyncio.create_subprocess_exec(
+                *args,
+                cwd=str(root),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
+            data = json.loads(stdout.decode("utf-8", errors="replace"))
 
             # pip-audit format: { dependencies: [ { name, version, vulns: [...] } ] }
             for dep in data.get("dependencies", []):

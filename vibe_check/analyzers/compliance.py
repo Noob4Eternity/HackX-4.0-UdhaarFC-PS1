@@ -13,7 +13,6 @@ import asyncio
 import json
 import logging
 import os
-import subprocess
 import re
 from pathlib import Path
 from typing import List, Optional
@@ -87,24 +86,23 @@ class ComplianceAnalyzer(BaseAnalyzer):
                 continue
 
             try:
-                from vibe_check.utils.subprocess import run as _run
-                proc = await _run(
+                proc = await asyncio.create_subprocess_exec(
                     "semgrep",
                     "--config", str(rule_path),
                     "--json",
                     "--quiet",
                     str(repo_path),
-                    timeout=30,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
-                stdout, stderr = proc.stdout, proc.stderr
+                stdout, stderr = await asyncio.wait_for(
+                    proc.communicate(), timeout=30
+                )
             except FileNotFoundError:
                 logger.warning("semgrep not installed — skipping compliance rules")
                 return []
-            except subprocess.TimeoutExpired:
+            except asyncio.TimeoutError:
                 logger.warning("semgrep timed out for %s", rule_file)
-                continue
-            except Exception as exc:
-                logger.warning("semgrep failed for %s: %s", rule_file, exc)
                 continue
 
             if not stdout:
@@ -496,6 +494,15 @@ class ComplianceAnalyzer(BaseAnalyzer):
                     tool="llm-compliance",
                 )
             )
+
+        # Hard cap: keep only the top 5 most severe LLM findings.
+        # The prompt asks for ≤5 but LLMs don't always obey.
+        # Sort by severity (most severe first) and truncate.
+        _SEV_ORDER = {Severity.HIGH: 0, Severity.MEDIUM: 1, Severity.LOW: 2, Severity.INFO: 3}
+        findings.sort(key=lambda f: _SEV_ORDER.get(f.severity, 9))
+        if len(findings) > 5:
+            logger.info("LLM returned %d compliance findings, capping to 5", len(findings))
+            findings = findings[:5]
 
         return findings
 
