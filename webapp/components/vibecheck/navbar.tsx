@@ -21,11 +21,11 @@ export function Navbar({ title }: NavbarProps) {
   const { user, logout } = useAuth();
 
   return (
-    <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-40">
+    <header className="h-16 border-b border-border/30 bg-background/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           {title && (
-            <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+            <h1 className="section-label text-sm">{title}</h1>
           )}
         </div>
 

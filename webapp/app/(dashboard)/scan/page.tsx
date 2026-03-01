@@ -224,7 +224,7 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col h-full">
       <Navbar title="New Scan" />
 
       <div className="flex-1 p-6 lg:p-8">
@@ -235,20 +235,9 @@ export default function ScanPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm mb-6">
-              <Sparkles className="h-4 w-4" />
-              <span>AI-Powered Security Analysis</span>
-            </div>
-            <div className="text-4xl lg:text-5xl font-light text-foreground mb-4 font-[family-name:var(--font-playfair)]">
-              Scan Your Codebase for
-              <br />
-              <em className="font-extralight italic bg-clip-text text-transparent bg-gradient-to-r from-yellow-200 via-white to-yellow-200">
-                Vulnerabilities
-              </em>
-            </div>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty italic leading-tight">
+            <div className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty italic leading-tight">
               Select a repository from your account, paste a URL, or upload a ZIP file.
-            </p>
+            </div>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -260,8 +249,8 @@ export default function ScanPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 className={cn(
-                  "glass-card rounded-2xl p-8",
-                  scanError ? "border-red-500/30" : "glow-cyan"
+                  "card-clean rounded-none p-8",
+                  scanError ? "border-red-500/30" : "border border-primary"
                 )}
               >
                 <div className="max-w-md mx-auto text-center">
@@ -317,7 +306,7 @@ export default function ScanPage() {
                         setScanError(null);
                         setProgressMessages([]);
                       }}
-                      className="mt-6 gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                      className="mt-6 gap-2 rounded-none"
                     >
                       <ArrowRight className="h-4 w-4" />
                       Try Again
@@ -335,7 +324,7 @@ export default function ScanPage() {
                 className="space-y-6"
               >
                 {/* ── Your Repositories ── */}
-                <div className="glass-card rounded-2xl p-6">
+                <div className="card-clean rounded-none p-6 border border-border">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-primary/10">
@@ -366,7 +355,7 @@ export default function ScanPage() {
                       {Array.from({ length: 6 }).map((_, i) => (
                         <div
                           key={i}
-                          className="h-24 rounded-xl bg-muted/20 animate-pulse"
+                          className="h-24 rounded-none bg-muted/20 animate-pulse"
                         />
                       ))}
                     </div>
@@ -387,7 +376,7 @@ export default function ScanPage() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.03 }}
                           onClick={() => handleRepoScan(repo)}
-                          className="text-left p-4 rounded-xl border border-border/50 bg-background/30 hover:border-primary/40 hover:bg-primary/5 transition-all group"
+                          className="text-left p-4 rounded-none border border-border bg-background/30 hover:border-primary hover:bg-primary/5 transition-all group"
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-sm text-foreground truncate group-hover:text-primary transition-colors">
@@ -441,7 +430,7 @@ export default function ScanPage() {
                 </div>
 
                 {/* GitHub URL Input */}
-                <div className="glass-card rounded-2xl p-6 glow-cyan">
+                <div className="card-clean rounded-none p-6 border border-primary">
                   <Input
                     placeholder="https://github.com/username/repository"
                     value={repoUrl}
@@ -471,7 +460,7 @@ export default function ScanPage() {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={cn(
-                    "glass-card rounded-2xl p-8 border-2 border-dashed transition-all duration-300 cursor-pointer",
+                    "card-clean rounded-none p-8 border-2 border-dashed transition-all duration-300 cursor-pointer",
                     isDragging
                       ? "border-primary bg-primary/5"
                       : uploadedFile
@@ -524,7 +513,7 @@ export default function ScanPage() {
                   >
                     <Button
                       onClick={handleScan}
-                      className="w-full h-14 text-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 font-semibold transition-all duration-300 group"
+                      className="w-full h-14 text-lg font-semibold transition-all duration-300 group rounded-none"
                     >
                       <Scan className="mr-2 h-5 w-5" />
                       Start Security Scan

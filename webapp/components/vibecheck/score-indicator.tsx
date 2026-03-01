@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { getScoreColor } from '@/lib/types';
+import { motion } from "framer-motion";
+import { getScoreColor } from "@/lib/types";
 
 interface ScoreIndicatorProps {
   score: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   showLabel?: boolean;
 }
 
-export function ScoreIndicator({ score, size = 'md', showLabel = true }: ScoreIndicatorProps) {
+export function ScoreIndicator({ score, size = "md", showLabel = true }: ScoreIndicatorProps) {
   const sizes = {
-    sm: { width: 100, stroke: 8, fontSize: 'text-xl' },
-    md: { width: 160, stroke: 12, fontSize: 'text-4xl' },
-    lg: { width: 220, stroke: 16, fontSize: 'text-6xl' },
+    sm: { width: 100, stroke: 8, fontSize: "text-xl" },
+    md: { width: 160, stroke: 12, fontSize: "text-4xl" },
+    lg: { width: 200, stroke: 14, fontSize: "text-5xl" },
   };
 
   const { width, stroke, fontSize } = sizes[size];
@@ -24,15 +24,15 @@ export function ScoreIndicator({ score, size = 'md', showLabel = true }: ScoreIn
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="relative" style={{ width, height: width }}>
-        {/* Background glow */}
-        <div 
-          className="absolute inset-0 rounded-full blur-xl opacity-30"
-          style={{ backgroundColor: color }}
-        />
-        
+      <div
+        className="relative overflow-visible"
+        style={{ width, height: width }}>
         {/* Background circle */}
-        <svg width={width} height={width} className="transform -rotate-90">
+        <svg
+          width={width}
+          height={width}
+          overflow="visible"
+          className="transform -rotate-90">
           <circle
             cx={width / 2}
             cy={width / 2}
@@ -54,38 +54,34 @@ export function ScoreIndicator({ score, size = 'md', showLabel = true }: ScoreIn
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 1.5, ease: 'easeOut' }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
             style={{
               filter: `drop-shadow(0 0 8px ${color})`,
             }}
           />
         </svg>
-        
+
         {/* Score text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.span
-            className={`font-bold ${fontSize}`}
+            className={`font-extralight ${fontSize}`}
             style={{ color }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-          >
+            transition={{ delay: 0.5, duration: 0.5 }}>
             {score}
           </motion.span>
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            / 100
-          </span>
+          <span className="section-label">/ 100</span>
         </div>
       </div>
-      
+
       {showLabel && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="text-center"
-        >
-          <p className="text-sm font-medium text-muted-foreground">VibeCheck Score</p>
+          className="text-center">
+          <p className="section-label">vibe-check Score</p>
         </motion.div>
       )}
     </div>
