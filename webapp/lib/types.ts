@@ -34,6 +34,37 @@ export interface ReportSummary {
 
 export type Verdict = "GO" | "NO-GO";
 
+// --- Scan progress types ---
+
+export type PhaseStatus = "pending" | "in_progress" | "complete" | "error";
+
+export interface ScanPhase {
+  id: string;
+  label: string;
+  status: PhaseStatus;
+  findings?: number;
+}
+
+export interface ProgressEvent {
+  message: string;
+  phase: string;
+  type: "start" | "complete" | "error" | "info";
+  timestamp: string;
+  findings?: number;
+}
+
+export const SCAN_PHASES: { id: string; label: string }[] = [
+  { id: "clone", label: "Clone" },
+  { id: "secrets", label: "Secrets" },
+  { id: "sast", label: "SAST" },
+  { id: "dependencies", label: "Dependencies" },
+  { id: "compliance", label: "Compliance" },
+  { id: "hallucination", label: "Hallucination" },
+  { id: "prompt_injection", label: "Prompt Inj." },
+  { id: "ai_summary", label: "AI Summary" },
+  { id: "saving", label: "Saving" },
+];
+
 export function getStatusFromScore(score: number): "go" | "no-go" {
   return score >= 70 ? "go" : "no-go";
 }

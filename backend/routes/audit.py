@@ -12,7 +12,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File,
 from fastapi.responses import StreamingResponse
 
 from backend.services import repo_cloner, scan_runner
-from backend.state import SCAN_STATUS
+from backend.state import SCAN_STATUS, emit_progress
 
 logger = logging.getLogger("backend.routes.audit")
 
@@ -48,17 +48,17 @@ async def start_audit(
 
     # Determine scan mode
     if repo_url:
-        SCAN_STATUS[scan_id]["progress"].append("Cloning repository...")
+        emit_progress(scan_id, "Cloning repository...", "clone", "start")
         background_tasks.add_task(_scan_from_url, scan_id, repo_url)
 
     elif github_token and repo_name:
-        SCAN_STATUS[scan_id]["progress"].append("Cloning private repository...")
+        emit_progress(scan_id, "Cloning private repository...", "clone", "start")
         background_tasks.add_task(
             _scan_from_oauth, scan_id, github_token, repo_name
         )
 
     elif zip_file:
-        SCAN_STATUS[scan_id]["progress"].append("Extracting uploaded archive...")
+        emit_progress(scan_id, "Extracting uploaded archive...", "clone", "start")
         # Read file content before the request ends
         zip_content = await zip_file.read()
         background_tasks.add_task(
@@ -111,10 +111,10 @@ async def _sse_generator(scan_id: str):
             yield _sse_event("scan_error", {"message": "Scan not found"})
             return
 
-        # Emit any new progress messages
+        # Emit any new progress messages (each entry is already a dict)
         progress = status.get("progress", [])
         while last_progress_idx < len(progress):
-            yield _sse_event("progress", {"message": progress[last_progress_idx]})
+            yield _sse_event("progress", progress[last_progress_idx])
             last_progress_idx += 1
 
         # Check terminal states
@@ -158,10 +158,10 @@ async def _scan_from_oauth(
     """Clone a private repo using an OAuth token and run scan."""
     repo_path: str | None = None
     try:
-        SCAN_STATUS[scan_id]["progress"].append(f"Cloning {repo_name}...")
+        emit_progress(scan_id, f"Cloning {repo_name}...", "clone", "info")
         clone_url = f"https://x-access-token:{github_token}@github.com/{repo_name}.git"
         repo_path = await repo_cloner.clone_from_url(clone_url)
-        SCAN_STATUS[scan_id]["progress"].append("Clone complete, starting scan...")
+        emit_progress(scan_id, "Clone complete, starting scan...", "clone", "complete")
         await scan_runner.run_scan(repo_path, scan_id, trigger_source="oauth")
     except Exception as exc:
         logger.error("OAuth scan %s failed: %s", scan_id, exc, exc_info=True)
