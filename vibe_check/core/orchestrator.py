@@ -6,7 +6,7 @@ import asyncio
 import logging
 import os
 import time
-from typing import Callable, List
+from typing import List
 
 from vibe_check.analyzers.base import BaseAnalyzer
 from vibe_check.core.scorer import calculate_composite, get_grade, get_verdict
@@ -74,9 +74,6 @@ def _count_files(repo_path: str) -> int:
     return count
 
 
-ProgressCallback = Callable[[str, str, str, int | None], None]
-
-
 class Orchestrator:
     """Runs a list of analyzers in parallel and produces a ScanResult."""
 
@@ -85,17 +82,13 @@ class Orchestrator:
         analyzers: List[BaseAnalyzer],
         timeout: int = 60,
         config: dict | None = None,
-        progress_callback: ProgressCallback | None = None,
     ):
         self.analyzers = analyzers
         self.timeout = timeout
         self.config = config or {}
-        self._progress = progress_callback or (lambda *a: None)
 
     async def _run_one(self, analyzer: BaseAnalyzer, repo_path: str) -> List[Finding]:
         """Run a single analyzer with timeout."""
-        phase = analyzer.name
-        self._progress(f"Running {phase} scan...", phase, "start", None)
         try:
             findings = await asyncio.wait_for(
                 analyzer.analyze(repo_path, self.config),
@@ -104,18 +97,12 @@ class Orchestrator:
             logger.info(
                 "%s finished — %d findings", analyzer.name, len(findings)
             )
-            self._progress(
-                f"{phase} complete — {len(findings)} finding{'s' if len(findings) != 1 else ''}",
-                phase, "complete", len(findings),
-            )
             return findings
         except asyncio.TimeoutError:
             logger.warning("%s timed out after %ds", analyzer.name, self.timeout)
-            self._progress(f"{phase} timed out after {self.timeout}s", phase, "error", None)
             return []
         except Exception as exc:
             logger.warning("%s crashed: %s", analyzer.name, exc, exc_info=True)
-            self._progress(f"{phase} failed: {exc}", phase, "error", None)
             return []
 
     async def run(self, repo_path: str) -> ScanResult:
@@ -142,9 +129,11 @@ class Orchestrator:
         for batch in results:
             all_findings.extend(batch)
 
+        # Track which analyzer names ran (for showing clean categories)
+        scanned_analyzers = [a.name for a in regular]
+
         # Phase 2 — run LLMSummarizer with the collected findings
         for summarizer in summarizers:
-            self._progress("Generating AI summary...", "ai_summary", "start", None)
             try:
                 summary_findings = await asyncio.wait_for(
                     summarizer.summarize(all_findings),
@@ -152,22 +141,16 @@ class Orchestrator:
                 )
                 all_findings.extend(summary_findings)
                 logger.info("LLM summarizer produced %d findings", len(summary_findings))
-                self._progress(
-                    f"AI summary complete — {len(summary_findings)} finding{'s' if len(summary_findings) != 1 else ''}",
-                    "ai_summary", "complete", len(summary_findings),
-                )
             except asyncio.TimeoutError:
                 logger.warning("LLM summarizer timed out after %ds", self.timeout)
-                self._progress("AI summary timed out", "ai_summary", "error", None)
             except Exception as exc:
                 logger.warning("LLM summarizer crashed: %s", exc, exc_info=True)
-                self._progress(f"AI summary failed: {exc}", "ai_summary", "error", None)
 
         # Collect token usage from any LLM client in the analyzers
         tokens_used = self._collect_token_usage()
 
         elapsed = time.perf_counter() - start
-        score, category_scores = calculate_composite(all_findings)
+        score, category_scores = calculate_composite(all_findings, scanned_analyzers)
         grade = get_grade(score)
         verdict = get_verdict(score)
 

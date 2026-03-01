@@ -50,6 +50,7 @@ async def run_scan(
             SASTAnalyzer(),
             DependencyAnalyzer(),
             HallucinationDetector(),
+            CostAnalyzer(),
             ComplianceAnalyzer(),
             PromptInjectionAnalyzer(),
             CostAnalyzer(),
