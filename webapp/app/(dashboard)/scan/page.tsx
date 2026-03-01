@@ -23,6 +23,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { startAudit, createProgressStream } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { SCAN_PHASES, type ProgressEvent, type ScanPhase } from "@/lib/types";
+import { ScanStepper } from "@/components/vibecheck/scan-stepper";
+import { ScanTerminal } from "@/components/vibecheck/scan-terminal";
 
 interface GitHubRepo {
   id: number;
@@ -63,7 +66,10 @@ export default function ScanPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanTarget, setScanTarget] = useState("");
-  const [progressMessages, setProgressMessages] = useState<string[]>([]);
+  const [progressEvents, setProgressEvents] = useState<ProgressEvent[]>([]);
+  const [phases, setPhases] = useState<ScanPhase[]>(
+    SCAN_PHASES.map((p) => ({ ...p, status: "pending" as const }))
+  );
   const [scanError, setScanError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const router = useRouter();
@@ -93,6 +99,20 @@ export default function ScanPage() {
     fetchRepos();
   }, [fetchRepos]);
 
+  // Helper to update a phase's status in the stepper
+  const updatePhaseStatus = useCallback(
+    (phaseId: string, status: "in_progress" | "complete" | "error", findings?: number) => {
+      setPhases((prev) =>
+        prev.map((p) =>
+          p.id === phaseId
+            ? { ...p, status, ...(findings !== undefined ? { findings } : {}) }
+            : p
+        )
+      );
+    },
+    []
+  );
+
   // Shared scan logic: starts audit and connects SSE
   const runScan = async (opts: {
     repoUrl?: string;
@@ -103,7 +123,8 @@ export default function ScanPage() {
   }) => {
     setIsScanning(true);
     setScanTarget(opts.displayName);
-    setProgressMessages([]);
+    setProgressEvents([]);
+    setPhases(SCAN_PHASES.map((p) => ({ ...p, status: "pending" as const })));
     setScanError(null);
 
     try {
@@ -118,8 +139,17 @@ export default function ScanPage() {
       eventSourceRef.current = es;
 
       es.addEventListener("progress", (e) => {
-        const data = JSON.parse(e.data);
-        setProgressMessages((prev) => [...prev, data.message]);
+        const data: ProgressEvent = JSON.parse(e.data);
+        setProgressEvents((prev) => [...prev, data]);
+
+        // Drive the stepper
+        if (data.type === "start") {
+          updatePhaseStatus(data.phase, "in_progress");
+        } else if (data.type === "complete") {
+          updatePhaseStatus(data.phase, "complete", data.findings);
+        } else if (data.type === "error") {
+          updatePhaseStatus(data.phase, "error");
+        }
       });
 
       es.addEventListener("complete", (e) => {
@@ -141,7 +171,15 @@ export default function ScanPage() {
         eventSourceRef.current = null;
         es.close();
         setScanError(errorMsg);
-        setProgressMessages((prev) => [...prev, `ERROR: ${errorMsg}`]);
+        setProgressEvents((prev) => [
+          ...prev,
+          {
+            message: `ERROR: ${errorMsg}`,
+            phase: "unknown",
+            type: "error",
+            timestamp: new Date().toISOString(),
+          },
+        ]);
         toast.error(errorMsg);
       });
 
@@ -153,7 +191,15 @@ export default function ScanPage() {
         eventSourceRef.current = null;
         const msg = "Connection to backend lost";
         setScanError(msg);
-        setProgressMessages((prev) => [...prev, `ERROR: ${msg}`]);
+        setProgressEvents((prev) => [
+          ...prev,
+          {
+            message: `ERROR: ${msg}`,
+            phase: "unknown",
+            type: "error",
+            timestamp: new Date().toISOString(),
+          },
+        ]);
         toast.error(msg);
       };
     } catch (err) {
@@ -249,70 +295,61 @@ export default function ScanPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 className={cn(
-                  "card-clean rounded-none p-8",
+                  "card-clean rounded-none p-8 space-y-6",
                   scanError ? "border-red-500/30" : "border border-primary"
                 )}
               >
-                <div className="max-w-md mx-auto text-center">
+                {/* Header */}
+                <div className="text-center">
                   {scanError ? (
-                    <div className="inline-flex p-4 rounded-full bg-red-500/10 mb-6">
-                      <AlertCircle className="h-12 w-12 text-red-400" />
+                    <div className="inline-flex p-4 bg-red-500/10 mb-4">
+                      <AlertCircle className="h-10 w-10 text-red-400" />
                     </div>
                   ) : (
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="inline-flex p-4 rounded-full bg-primary/10 mb-6"
+                      className="inline-flex p-4 bg-primary/10 mb-4"
                     >
-                      <Loader2 className="h-12 w-12 text-primary" />
+                      <Loader2 className="h-10 w-10 text-primary" />
                     </motion.div>
                   )}
-
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-1">
                     {scanError ? "Scan Failed" : "Scanning in Progress"}
                   </h2>
-                  <p className="text-muted-foreground mb-6">
+                  <p className="text-sm text-muted-foreground">
                     {scanError || `Analyzing ${scanTarget}`}
                   </p>
+                </div>
 
-                  <div className="text-left space-y-2 max-h-60 overflow-y-auto bg-background/50 rounded-lg p-4 border border-border/50">
-                    {progressMessages.length === 0 && !scanError && (
-                      <p className="text-sm text-muted-foreground">Initializing scan...</p>
-                    )}
-                    {progressMessages.map((msg, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-start gap-2 text-sm"
-                      >
-                        <span className={cn(
-                          "mt-0.5",
-                          msg.startsWith("ERROR:") ? "text-red-400" : "text-primary"
-                        )}>&#x2022;</span>
-                        <span className={cn(
-                          msg.startsWith("ERROR:")
-                            ? "text-red-400 font-medium"
-                            : "text-muted-foreground"
-                        )}>{msg}</span>
-                      </motion.div>
-                    ))}
-                  </div>
+                {/* Stepper */}
+                <ScanStepper phases={phases} />
 
-                  {scanError && (
+                {/* Terminal log */}
+                <ScanTerminal events={progressEvents} />
+
+                {/* Retry button on error */}
+                {scanError && (
+                  <div className="text-center">
                     <Button
                       onClick={() => {
                         setIsScanning(false);
                         setScanError(null);
-                        setProgressMessages([]);
+                        setProgressEvents([]);
+                        setPhases(
+                          SCAN_PHASES.map((p) => ({
+                            ...p,
+                            status: "pending" as const,
+                          }))
+                        );
                       }}
-                      className="mt-6 gap-2 rounded-none"
+                      className="gap-2 rounded-none"
                     >
                       <ArrowRight className="h-4 w-4" />
                       Try Again
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </motion.div>
             ) : (
               /* ── Scan Form ── */

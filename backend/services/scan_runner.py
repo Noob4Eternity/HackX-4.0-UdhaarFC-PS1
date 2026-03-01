@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from backend import database
-from backend.state import SCAN_STATUS
+from backend.state import SCAN_STATUS, emit_progress
 
 logger = logging.getLogger("backend.services.scan_runner")
 
@@ -31,7 +31,7 @@ async def run_scan(
     try:
         # ── Mark scanning ───────────────────────────────────────────
         SCAN_STATUS[scan_id]["status"] = "scanning"
-        SCAN_STATUS[scan_id]["progress"].append("Scanning repository...")
+        emit_progress(scan_id, "Starting analysis...", "clone", "complete")
 
         # ── Build analyzer list ─────────────────────────────────────
         from vibe_check.analyzers.secrets import SecretsAnalyzer
@@ -57,21 +57,26 @@ async def run_scan(
 
         config = load_config(repo_path)
 
+        # ── Build progress callback bound to this scan_id ───────────
+        def on_progress(message: str, phase: str, type_: str, findings: int | None) -> None:
+            emit_progress(scan_id, message, phase, type_, findings)
+
         # ── Create orchestrator and run ─────────────────────────────
         from vibe_check.core.orchestrator import Orchestrator
 
-        orchestrator = Orchestrator(analyzers=analyzers, config=config)
+        orchestrator = Orchestrator(
+            analyzers=analyzers, config=config, progress_callback=on_progress
+        )
         result = await orchestrator.run(repo_path)
 
-        SCAN_STATUS[scan_id]["progress"].append(
-            "Analysis complete, saving results..."
-        )
+        emit_progress(scan_id, "Analysis complete, saving results...", "saving", "start")
 
         # ── Map verdict ─────────────────────────────────────────────
         verdict = "GO" if result.score >= FAIL_UNDER_SCORE else "NO-GO"
 
         # ── Persist to database ─────────────────────────────────────
         await database.save_scan(scan_id, result, trigger_source, verdict)
+        emit_progress(scan_id, "Results saved", "saving", "complete")
 
         # ── Mark complete ───────────────────────────────────────────
         SCAN_STATUS[scan_id]["status"] = "complete"
