@@ -63,7 +63,7 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="relative w-full max-w-md mx-4"
       >
-        <div className="glass-card rounded-2xl p-8 glow-cyan">
+        <div className="card-clean rounded-none p-8 border border-primary">
           {/* Logo and Header */}
           <div className="flex flex-col items-center mb-8">
             <Logo size="lg" />
@@ -118,7 +118,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 font-semibold transition-all duration-300 group"
+              className="w-full h-12 font-semibold transition-all duration-300 group rounded-none"
             >
               {isLoading ? (
                 <motion.div
@@ -151,7 +151,7 @@ export default function LoginPage() {
             variant="outline"
             onClick={handleGithubLogin}
             disabled={isGithubLoading}
-            className="w-full h-12 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+            className="w-full h-12 border-border hover:border-primary hover:bg-primary/5 transition-all duration-300 rounded-none"
           >
             {isGithubLoading ? (
               <motion.div

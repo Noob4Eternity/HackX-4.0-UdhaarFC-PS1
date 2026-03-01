@@ -116,30 +116,30 @@ function getDangerousFiles(findings: Finding[]) {
 // Recent scans list view
 function RecentScansView({ scans }: { scans: ReportSummary[] }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <h1 className="text-3xl font-light text-foreground font-[family-name:var(--font-playfair)] mb-2">
+        <h1 className="text-5xl font-extralight text-foreground mb-4">
           Recent Scans
         </h1>
-        <p className="text-muted-foreground">Select a scan to view its full report</p>
+        <p className="section-label">Select a scan to view its full report</p>
       </motion.div>
 
       {scans.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="glass-card rounded-2xl p-12 text-center"
+          className="card-clean rounded-none p-12 text-center"
         >
           <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">No scans yet</h3>
           <p className="text-sm text-muted-foreground mb-6">
             Start your first security scan to see results here
           </p>
-          <Button asChild className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10">
+          <Button asChild className="rounded-none">
             <Link href="/scan">Start a Scan</Link>
           </Button>
         </motion.div>
@@ -153,14 +153,14 @@ function RecentScansView({ scans }: { scans: ReportSummary[] }) {
               transition={{ delay: i * 0.05 }}
             >
               <Link href={`/dashboard?id=${scan.id}`}>
-                <div className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all group cursor-pointer">
+                <div className="card-clean rounded-none p-6 hover:border-primary/50 transition-all group cursor-pointer border border-border">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-5">
+                      <div className="p-2 rounded-none bg-muted/30">
                         <Github className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-foreground">{scan.repo_name}</h3>
+                        <h3 className="font-light text-lg text-foreground">{scan.repo_name}</h3>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
@@ -173,12 +173,12 @@ function RecentScansView({ scans }: { scans: ReportSummary[] }) {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-6">
                       <div className="text-right">
-                        <div className="text-2xl font-bold" style={{ color: getScoreColor(scan.total_score) }}>
+                        <div className="text-4xl font-extralight" style={{ color: getScoreColor(scan.total_score) }}>
                           {Math.round(scan.total_score)}
                         </div>
-                        <div className="text-xs text-muted-foreground">/ 100</div>
+                        <div className="text-xs text-muted-foreground tracking-wider">/ 100</div>
                       </div>
                       <StatusBadge status={scan.verdict === 'GO' ? 'go' : 'no-go'} size="sm" />
                       <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -211,22 +211,22 @@ function ReportView({ report }: { report: Report }) {
   const verdictStatus = report.verdict === 'GO' ? 'go' : 'no-go' as const;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
       >
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-muted/50">
+        <div className="flex items-center gap-5">
+          <div className="p-3 rounded-xl bg-muted/30">
             <Github className="h-6 w-6 text-muted-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{report.repo_name}</h1>
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <h1 className="text-3xl font-light text-foreground">{report.repo_name}</h1>
+            <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
               {report.finding_count} findings
-              <span className="text-border">|</span>
+              <span className="text-border/50">|</span>
               {new Date(report.scanned_at).toLocaleDateString('en-US', {
                 month: 'long', day: 'numeric', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
@@ -246,12 +246,12 @@ function ReportView({ report }: { report: Report }) {
       </motion.div>
 
       {/* Score and Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="glass-card rounded-2xl p-8 flex flex-col items-center justify-center glow-cyan"
+          className="card-clean rounded-none p-10 flex flex-col items-center justify-center border border-border"
         >
           <ScoreIndicator score={Math.round(report.total_score)} size="lg" />
         </motion.div>
@@ -260,40 +260,40 @@ function ReportView({ report }: { report: Report }) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="glass-card rounded-2xl p-8 flex flex-col items-center justify-center gap-6"
+          className="card-clean rounded-none p-10 flex flex-col items-center justify-center gap-8 border border-border"
         >
           <StatusBadge status={verdictStatus} size="lg" />
           <div className="text-center">
-            <p className="text-lg font-medium text-foreground">Deployment Recommendation</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="section-label mb-2">Deployment Recommendation</p>
+            <p className="text-sm text-muted-foreground font-light">
               {report.verdict === 'GO'
                 ? 'Safe to deploy with minor recommendations'
                 : 'Significant vulnerabilities require immediate attention'}
             </p>
           </div>
-          <div className="flex gap-8 text-center">
+          <div className="flex gap-10 text-center">
             <div>
-              <p className="text-3xl font-bold text-destructive">{severityCounts.critical}</p>
-              <p className="text-xs text-muted-foreground">Critical</p>
+              <p className="text-4xl font-extralight text-destructive">{severityCounts.critical}</p>
+              <p className="section-label mt-1">Critical</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-orange-400">{severityCounts.high}</p>
-              <p className="text-xs text-muted-foreground">High</p>
+              <p className="text-4xl font-extralight text-orange-400">{severityCounts.high}</p>
+              <p className="section-label mt-1">High</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-yellow-400">{severityCounts.medium}</p>
-              <p className="text-xs text-muted-foreground">Medium</p>
+              <p className="text-4xl font-extralight text-yellow-400">{severityCounts.medium}</p>
+              <p className="section-label mt-1">Medium</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-blue-400">{severityCounts.low}</p>
-              <p className="text-xs text-muted-foreground">Low</p>
+              <p className="text-4xl font-extralight text-blue-400">{severityCounts.low}</p>
+              <p className="section-label mt-1">Low</p>
             </div>
           </div>
         </motion.div>
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Severity Bar Chart */}
         <ChartCard title="Vulnerabilities by Severity" description="Distribution across severity levels">
           <ChartContainer config={{ value: { label: 'Count' } }} className="h-[250px]">
@@ -350,20 +350,20 @@ function ReportView({ report }: { report: Report }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card rounded-2xl overflow-hidden"
+          className="card-clean rounded-none overflow-hidden border border-border"
         >
-          <div className="p-6 border-b border-border/50">
-            <h3 className="text-lg font-semibold text-foreground">Category Scores</h3>
-            <p className="text-sm text-muted-foreground mt-1">Score breakdown by analysis category</p>
+          <div className="p-8 border-b border-border/30">
+            <h3 className="section-label">Category Scores</h3>
+            <p className="text-sm text-muted-foreground font-light mt-2">Score breakdown by analysis category</p>
           </div>
-          <div className="p-6 grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-8 grid grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.entries(report.category_scores).map(([category, score]) => (
               <div key={category} className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground capitalize">
+                  <span className="section-label">
                     {category.replace(/_/g, ' ')}
                   </span>
-                  <span className="text-sm font-bold" style={{ color: getScoreColor(score) }}>
+                  <span className="text-sm font-extralight" style={{ color: getScoreColor(score) }}>
                     {Math.round(score)}
                   </span>
                 </div>
@@ -388,31 +388,31 @@ function ReportView({ report }: { report: Report }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="glass-card rounded-2xl overflow-hidden glow-cyan"
+          className="card-clean rounded-none overflow-hidden border border-border"
         >
-          <div className="p-6 border-b border-border/50">
+          <div className="p-8 border-b border-border/30">
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">Most Dangerous Files</h3>
+              <h3 className="section-label">Most Dangerous Files</h3>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Files with the highest risk scores</p>
+            <p className="text-sm text-muted-foreground font-light mt-2">Files with the highest risk scores</p>
           </div>
 
           <Table>
             <TableHeader>
-              <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="text-muted-foreground">File Name</TableHead>
-                <TableHead className="text-muted-foreground text-center">Risk Score</TableHead>
-                <TableHead className="text-muted-foreground text-center">Findings</TableHead>
-                <TableHead className="text-muted-foreground text-center">Severity</TableHead>
-                <TableHead className="text-muted-foreground text-right">Action</TableHead>
+              <TableRow className="border-border/30 hover:bg-transparent">
+                <TableHead className="section-label">File Name</TableHead>
+                <TableHead className="section-label text-center">Risk Score</TableHead>
+                <TableHead className="section-label text-center">Findings</TableHead>
+                <TableHead className="section-label text-center">Severity</TableHead>
+                <TableHead className="section-label text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {dangerousFiles.map((file, index) => (
                 <TableRow
                   key={file.fileName}
-                  className="border-border/50 hover:bg-muted/20 transition-colors"
+                  className="border-border/30 hover:bg-muted/10 transition-colors"
                 >
                   <TableCell className="font-mono text-sm">
                     <motion.div
@@ -494,7 +494,7 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar title={scanId ? "Scan Report" : "Dashboard"} />
 
-      <div className="flex-1 p-6 lg:p-8">
+      <div className="flex-1 p-8 lg:p-10">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <motion.div
@@ -504,13 +504,13 @@ export default function DashboardPage() {
             />
           </div>
         ) : error ? (
-          <div className="glass-card rounded-2xl p-12 text-center">
+          <div className="card-clean rounded-none p-12 text-center border-red-500/30">
             <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Error</h3>
             <p className="text-sm text-muted-foreground mb-4">{error}</p>
             <Button
               onClick={fetchData}
-              className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+              className="rounded-none"
             >
               Try Again
             </Button>

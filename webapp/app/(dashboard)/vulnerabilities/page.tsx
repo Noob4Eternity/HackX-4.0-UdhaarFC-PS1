@@ -67,7 +67,7 @@ function VulnerabilityRow({ finding, isExpanded, onToggle }: {
           {finding.line_number || '—'}
         </TableCell>
         <TableCell className="text-center">
-          <SeverityBadge severity={finding.severity} size="sm" />
+          <SeverityBadge severity={finding.severity as 'critical' | 'high' | 'medium' | 'low'} size="sm" />
         </TableCell>
         <TableCell className="font-medium">{finding.title}</TableCell>
         <TableCell className="max-w-xs truncate text-muted-foreground text-sm">
@@ -79,7 +79,7 @@ function VulnerabilityRow({ finding, isExpanded, onToggle }: {
               size="sm"
               variant="outline"
               onClick={handleFixWithAI}
-              className="gap-2 text-primary border-primary/30 hover:bg-primary/10 whitespace-nowrap"
+              className="gap-2 text-primary border-primary hover:bg-primary/10 whitespace-nowrap rounded-none"
             >
               Fix with AI
               <ExternalLink className="h-3.5 w-3.5" />
@@ -151,7 +151,7 @@ function VulnerabilityRow({ finding, isExpanded, onToggle }: {
                         </div>
                         <Button
                           onClick={handleFixWithAI}
-                          className="mt-3 gap-2 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                          className="mt-3 gap-2 rounded-none"
                         >
                           Get AI-Powered Fix
                           <ExternalLink className="h-4 w-4" />
@@ -221,13 +221,13 @@ export default function VulnerabilitiesPage() {
       <div className="min-h-screen flex flex-col">
         <Navbar title="Vulnerabilities" />
         <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
-          <div className="glass-card rounded-2xl p-12 text-center">
+          <div className="card-clean rounded-none p-12 text-center border border-border">
             <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">No scan selected</h3>
             <p className="text-sm text-muted-foreground mb-6">
               Go to the dashboard and select a scan to view its vulnerabilities
             </p>
-            <Button asChild className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10">
+            <Button asChild className="rounded-none">
               <Link href="/dashboard">Go to Dashboard</Link>
             </Button>
           </div>
@@ -241,7 +241,7 @@ export default function VulnerabilitiesPage() {
       <div className="min-h-screen flex flex-col">
         <Navbar title="Vulnerabilities" />
         <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
-          <div className="glass-card rounded-2xl p-12 text-center">
+          <div className="card-clean rounded-none p-12 text-center border border-red-500/30">
             <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Error</h3>
             <p className="text-sm text-muted-foreground">{error || 'Report not found'}</p>
@@ -295,7 +295,7 @@ export default function VulnerabilitiesPage() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className={cn('px-4 py-3 rounded-xl border', stat.color)}
+              className={cn('px-4 py-3 rounded-none border', stat.color)}
             >
               <span className="text-2xl font-bold">{stat.count}</span>
               <span className="ml-2 text-sm opacity-80">{stat.label}</span>
@@ -308,7 +308,7 @@ export default function VulnerabilitiesPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="glass-card rounded-xl p-4 flex flex-col lg:flex-row gap-4"
+          className="card-clean rounded-none p-4 flex flex-col lg:flex-row gap-4 border border-border"
         >
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -358,7 +358,7 @@ export default function VulnerabilitiesPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card rounded-2xl overflow-hidden glow-cyan"
+          className="card-clean rounded-none overflow-hidden border border-primary"
         >
           <div className="p-6 border-b border-border/50">
             <div className="flex items-center justify-between">

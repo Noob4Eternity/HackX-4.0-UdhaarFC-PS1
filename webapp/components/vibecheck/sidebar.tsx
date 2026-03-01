@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Scan,
-  AlertTriangle,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -26,7 +25,6 @@ import {
 const navItems = [
   { href: '/scan', label: 'Scan', icon: Scan },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/vulnerabilities', label: 'Vulnerabilities', icon: AlertTriangle },
 ];
 
 function NavLink({
@@ -43,15 +41,15 @@ function NavLink({
       <motion.div
         whileHover={{ x: collapsed ? 0 : 4 }}
         className={cn(
-          'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-          collapsed && 'justify-center px-3',
+          'flex items-center gap-3 px-4 py-3 rounded-none transition-all border-l-2',
+          collapsed ? 'justify-center px-3' : '',
           isActive
-            ? 'bg-sidebar-primary text-sidebar-primary-foreground glow-cyan'
-            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+            ? 'border-primary bg-primary/10 text-primary glow-cyan'
+            : 'border-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
         )}
       >
         <item.icon size={20} className="shrink-0" />
-        {!collapsed && <span className="font-medium">{item.label}</span>}
+        {!collapsed && <span className="font-medium tracking-wide">{item.label}</span>}
       </motion.div>
     </Link>
   );
@@ -81,12 +79,12 @@ export function Sidebar() {
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         className={cn(
-          'h-screen sticky top-0 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300',
+          'h-screen sticky top-0 shrink-0 bg-sidebar border-r border-sidebar-border/50 flex flex-col transition-all duration-300',
           collapsed ? 'w-[68px]' : 'w-64'
         )}
       >
         {/* Logo + collapse toggle */}
-        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+        <div className="p-4 border-b border-sidebar-border/50 flex items-center justify-between">
           <Link href="/scan">
             <Logo size={collapsed ? 'sm' : 'md'} showText={!collapsed} />
           </Link>
@@ -118,7 +116,7 @@ export function Sidebar() {
         <div className="flex-1" />
 
         {/* Footer */}
-        <div className={cn('p-3 border-t border-sidebar-border space-y-1', collapsed && 'px-2')}>
+        <div className={cn('p-3 border-t border-sidebar-border/50 space-y-1', collapsed && 'px-2')}>
           {collapsed ? (
             <>
               <Tooltip delayDuration={0}>

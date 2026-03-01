@@ -64,7 +64,7 @@ export function ScoreIndicator({ score, size = 'md', showLabel = true }: ScoreIn
         {/* Score text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.span
-            className={`font-bold ${fontSize}`}
+            className={`font-extralight ${fontSize}`}
             style={{ color }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -72,7 +72,7 @@ export function ScoreIndicator({ score, size = 'md', showLabel = true }: ScoreIn
           >
             {score}
           </motion.span>
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+          <span className="section-label">
             / 100
           </span>
         </div>
@@ -85,7 +85,7 @@ export function ScoreIndicator({ score, size = 'md', showLabel = true }: ScoreIn
           transition={{ delay: 0.8 }}
           className="text-center"
         >
-          <p className="text-sm font-medium text-muted-foreground">VibeCheck Score</p>
+          <p className="section-label">vibe-check Score</p>
         </motion.div>
       )}
     </div>

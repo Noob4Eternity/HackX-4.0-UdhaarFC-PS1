@@ -45,7 +45,7 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200 }}
       className={cn(
-        'inline-flex items-center font-bold rounded-xl border shadow-lg',
+        'inline-flex items-center font-medium tracking-wider rounded-xl border shadow-lg',
         colors,
         glow,
         sizes[size]

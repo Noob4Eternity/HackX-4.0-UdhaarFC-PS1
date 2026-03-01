@@ -76,23 +76,23 @@ export function SummaryPanel({ summary }: SummaryPanelProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
-      className="glass-card rounded-2xl overflow-hidden glow-purple"
+      className="card-clean rounded-2xl overflow-hidden border border-border/20 glow-purple"
     >
-      <div className="flex items-center gap-3 p-4 border-b border-border/50">
-        <div className="p-2 rounded-lg bg-muted/50">
+      <div className="flex items-center gap-3 p-6 border-b border-border/30">
+        <div className="p-2 rounded-lg bg-muted/30">
           <Bot className="h-5 w-5 text-purple-400" />
         </div>
         <div>
-          <h3 className="font-semibold text-foreground flex items-center gap-2">
+          <h3 className="font-light text-lg text-foreground flex items-center gap-2">
             AI Security Summary
             <Sparkles className="h-4 w-4 text-purple-400" />
           </h3>
-          <p className="text-xs text-muted-foreground">Powered by VibeCheck AI Engine</p>
+          <p className="section-label mt-1">Powered by vibe-check AI Engine</p>
         </div>
       </div>
-      
+
       <ScrollArea className="h-[400px]">
-        <div className="p-6">
+        <div className="p-8">
           {renderSummary(summary)}
         </div>
       </ScrollArea>

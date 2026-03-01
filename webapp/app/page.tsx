@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Shield, ArrowRight, Copy, Check, Terminal } from "lucide-react";
+import { Shield, ArrowRight, Copy, Check, Terminal, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LightRays } from "@/components/ui/light-rays";
 
@@ -54,7 +54,7 @@ function CodeSnippet() {
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+    <div className="landing-fonts relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Light Rays */}
       <LightRays
         color="rgba(0, 180, 220, 0.12)"
@@ -71,24 +71,30 @@ export default function LandingPage() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="mb-8">
-          <div className="inline-flex items-center gap-3">
-            <div className="bg-cyan-600 p-2.5 rounded-lg">
-              <Shield
-                size={28}
-                className="text-background"
-              />
-            </div>
-            <span className="text-2xl font-bold text-foreground italic">VibeCheck</span>
+          className=" flex flex-col items-center justify-center gap-4">
+          <div className="relative w-16 h-16 flex items-center justify-center">
+            {/* Inner static circle */}
+            <div className="absolute w-6 h-6 border-2 border-white rounded-full" />
+            {/* Outer revolving ring */}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute w-12 h-12 border border-white/20 border-t-white rounded-full"
+            />
           </div>
         </motion.div>
+
+        <div className="section-label inline-flex items-center gap-2 px-4 py-2 border border-border mb-6">
+              <Sparkles className="h-4 w-4" />
+              <span>AI-Powered Security Analysis</span>
+            </div>
 
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.6 }}
-          className="text-5xl md:text-7xl font-light text-foreground mb-6 font-[family-name:var(--font-playfair)] leading-[1.3] tracking-tight">
+          className="text-5xl md:text-7xl font-light text-foreground mb-6 font-(family-name:--font-playfair) leading-[1.3] tracking-tight">
           Security for code that{" "}
           <div className="font-extralight italic  bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 via-white to-yellow-500 tracking-tight">
             ships fast
@@ -100,7 +106,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed font-extralight *:">
+          className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed font-light">
           AI-powered vulnerability scanning from your terminal. Find issues before they find you.
         </motion.p>
 
@@ -116,7 +122,7 @@ export default function LandingPage() {
           <Button
             variant="outline"
             asChild
-            className="h-12 px-8 border border-yellow-400/50 text-yellow-300 font-medium hover:!bg-transparent hover:!text-yellow-300">
+            className="h-12 px-8 border border-primary text-primary font-medium rounded-none hover:bg-primary/10">
             <Link href="/login">
               Get Started
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -125,7 +131,7 @@ export default function LandingPage() {
           <Button
             variant="ghost"
             asChild
-            className="h-12 px-8 text-muted-foreground hover:text-foreground">
+            className="h-12 px-8 text-muted-foreground hover:text-foreground rounded-none">
             <a
               href="https://github.com/Noob4Eternity/HackX-4.0-UdhaarFC-PS1"
               target="_blank"
