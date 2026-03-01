@@ -224,7 +224,7 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col h-full">
       <Navbar title="New Scan" />
 
       <div className="flex-1 p-6 lg:p-8">

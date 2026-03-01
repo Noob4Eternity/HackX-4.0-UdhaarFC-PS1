@@ -5,22 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Github, AlertTriangle, FileText, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Legend
-} from 'recharts';
 import { Navbar } from '@/components/vibecheck/navbar';
 import { ScoreIndicator } from '@/components/vibecheck/score-indicator';
 import { StatusBadge } from '@/components/vibecheck/status-badge';
-import { ChartCard } from '@/components/vibecheck/chart-card';
 import { SummaryPanel } from '@/components/vibecheck/summary-panel';
 import { SeverityBadge } from '@/components/vibecheck/severity-badge';
 import { Button } from '@/components/ui/button';
@@ -32,23 +19,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { getReport, getReports } from '@/lib/api';
 import type { Report, ReportSummary, Finding } from '@/lib/types';
 import { getScoreColor } from '@/lib/types';
 
-const SEVERITY_COLORS: Record<string, string> = {
-  Critical: '#ef4444',
-  High: '#f97316',
-  Medium: '#eab308',
-  Low: '#94a3b8',
-  Info: '#6b7280',
-};
-
 const CATEGORY_COLORS: Record<string, string> = {
   secret: '#a855f7',
   sast: '#ef4444',
-  vulnerable_dependency: '#cbd5e1',
+  vulnerable_dependency: '#64748b',
   hallucinated_dependency: '#f97316',
   hallucinated_import: '#f97316',
   compliance_gdpr: '#22c55e',
@@ -69,18 +47,14 @@ function computeSeverityCounts(findings: Finding[]) {
   return counts;
 }
 
-function computeCategoryDistribution(findings: Finding[]) {
+function computeFindingsByCategory(findings: Finding[]) {
   const counts: Record<string, number> = {};
   for (const f of findings) {
+    if (f.category === 'llm_review') continue;
     counts[f.category] = (counts[f.category] || 0) + 1;
   }
   return Object.entries(counts)
-    .filter(([cat]) => cat !== 'llm_review')
-    .map(([name, value]) => ({
-      name: name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-      value,
-      fill: CATEGORY_COLORS[name] || '#94a3b8',
-    }));
+    .sort(([, a], [, b]) => b - a);
 }
 
 function getExecutiveSummary(findings: Finding[]): string | null {
@@ -197,262 +171,246 @@ function RecentScansView({ scans }: { scans: ReportSummary[] }) {
 // Full report view
 function ReportView({ report }: { report: Report }) {
   const severityCounts = computeSeverityCounts(report.findings);
-  const categoryData = computeCategoryDistribution(report.findings);
+  const findingsByCategory = computeFindingsByCategory(report.findings);
+  const maxCategoryCount = findingsByCategory.length > 0 ? findingsByCategory[0][1] : 1;
   const dangerousFiles = getDangerousFiles(report.findings);
   const executiveSummary = getExecutiveSummary(report.findings);
-
-  const severityData = [
-    { name: 'Critical', value: severityCounts.critical, fill: SEVERITY_COLORS.Critical },
-    { name: 'High', value: severityCounts.high, fill: SEVERITY_COLORS.High },
-    { name: 'Medium', value: severityCounts.medium, fill: SEVERITY_COLORS.Medium },
-    { name: 'Low', value: severityCounts.low, fill: SEVERITY_COLORS.Low },
-  ];
-
   const verdictStatus = report.verdict === 'GO' ? 'go' : 'no-go' as const;
 
+  const severityItems = [
+    { label: 'Critical', count: severityCounts.critical, color: 'text-red-400' },
+    { label: 'High', count: severityCounts.high, color: 'text-orange-400' },
+    { label: 'Medium', count: severityCounts.medium, color: 'text-yellow-400' },
+    { label: 'Low', count: severityCounts.low, color: 'text-slate-400' },
+  ];
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border/30"
       >
-        <div className="flex items-center gap-5">
-          <div className="p-3 rounded-xl bg-muted/30">
-            <Github className="h-6 w-6 text-muted-foreground" />
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="p-2.5 rounded-none bg-muted/30 shrink-0">
+            <Github className="h-5 w-5 text-muted-foreground" />
           </div>
-          <div>
-            <h1 className="text-3xl font-light text-foreground">{report.repo_name}</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-light text-foreground truncate">{report.repo_name}</h1>
             <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
               {report.finding_count} findings
               <span className="text-border/50">|</span>
               {new Date(report.scanned_at).toLocaleDateString('en-US', {
-                month: 'long', day: 'numeric', year: 'numeric',
+                month: 'short', day: 'numeric', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
               })}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" className="gap-2" asChild>
-            <Link href={`/vulnerabilities?id=${report.id}`}>
-              <AlertTriangle className="h-4 w-4" />
-              View Vulnerabilities
-            </Link>
-          </Button>
+        <Button variant="outline" className="gap-2 shrink-0" asChild>
+          <Link href={`/vulnerabilities?id=${report.id}`}>
+            <AlertTriangle className="h-4 w-4" />
+            View Vulnerabilities
+          </Link>
+        </Button>
+      </motion.div>
+
+      {/* Score + Verdict + Severity — single card */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="card-clean rounded-none border border-border p-6"
+      >
+        <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
+          {/* Score ring */}
+          <div className="shrink-0">
+            <ScoreIndicator score={Math.round(report.total_score)} size="md" />
+          </div>
+
+          {/* Vertical divider */}
+          <div className="hidden lg:block w-px self-stretch bg-border/40" />
+          <div className="lg:hidden w-full h-px bg-border/40" />
+
+          {/* Verdict + severity counts */}
+          <div className="flex-1 flex flex-col items-center lg:items-start gap-4">
+            <div className="flex items-center gap-3">
+              <StatusBadge status={verdictStatus} size="md" />
+              <span className="text-sm text-muted-foreground font-light">
+                {report.verdict === 'GO'
+                  ? 'Safe to deploy with minor recommendations'
+                  : 'Significant vulnerabilities require attention'}
+              </span>
+            </div>
+
+            {/* Horizontal separator */}
+            <div className="w-full h-px bg-border/30" />
+
+            <div className="flex flex-wrap gap-5">
+              {severityItems.map((item, i) => (
+                <div key={item.label} className="flex items-center gap-5">
+                  <div className="text-center">
+                    <p className={`text-2xl font-extralight ${item.color}`}>{item.count}</p>
+                    <p className="section-label mt-0.5">{item.label}</p>
+                  </div>
+                  {i < severityItems.length - 1 && (
+                    <div className="h-8 w-px bg-border/30" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Score and Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="card-clean rounded-none p-10 flex flex-col items-center justify-center border border-border"
-        >
-          <ScoreIndicator score={Math.round(report.total_score)} size="lg" />
-        </motion.div>
+      {/* Category Scores + Findings side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Category Scores */}
+        {report.category_scores && Object.keys(report.category_scores).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="card-clean rounded-none overflow-hidden border border-border"
+          >
+            <div className="px-5 py-4 border-b border-border/30">
+              <h3 className="section-label">Category Scores</h3>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              {Object.entries(report.category_scores).map(([category, score], i) => (
+                <div key={category} className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="section-label text-[0.7rem]">
+                      {category.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-xs font-extralight tabular-nums" style={{ color: getScoreColor(score) }}>
+                      {Math.round(score)}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: getScoreColor(score) }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${score}%` }}
+                      transition={{ duration: 0.8, delay: 0.3 + i * 0.08 }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="card-clean rounded-none p-10 flex flex-col items-center justify-center gap-8 border border-border"
-        >
-          <StatusBadge status={verdictStatus} size="lg" />
-          <div className="text-center">
-            <p className="section-label mb-2">Deployment Recommendation</p>
-            <p className="text-sm text-muted-foreground font-light">
-              {report.verdict === 'GO'
-                ? 'Safe to deploy with minor recommendations'
-                : 'Significant vulnerabilities require immediate attention'}
-            </p>
-          </div>
-          <div className="flex gap-10 text-center">
-            <div>
-              <p className="text-4xl font-extralight text-destructive">{severityCounts.critical}</p>
-              <p className="section-label mt-1">Critical</p>
+        {/* Findings by Category */}
+        {findingsByCategory.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="card-clean rounded-none overflow-hidden border border-border"
+          >
+            <div className="px-5 py-4 border-b border-border/30">
+              <h3 className="section-label">Findings by Category</h3>
             </div>
-            <div>
-              <p className="text-4xl font-extralight text-orange-400">{severityCounts.high}</p>
-              <p className="section-label mt-1">High</p>
-            </div>
-            <div>
-              <p className="text-4xl font-extralight text-yellow-400">{severityCounts.medium}</p>
-              <p className="section-label mt-1">Medium</p>
-            </div>
-            <div>
-              <p className="text-4xl font-extralight text-slate-400">{severityCounts.low}</p>
-              <p className="section-label mt-1">Low</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Severity Bar Chart */}
-        <ChartCard title="Vulnerabilities by Severity" description="Distribution across severity levels">
-          <ChartContainer config={{ value: { label: 'Count' } }} className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={severityData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis type="number" stroke="#888" fontSize={12} />
-                <YAxis type="category" dataKey="name" stroke="#888" fontSize={12} width={70} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                  {severityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </ChartCard>
-
-        {/* Category Pie Chart */}
-        {categoryData.length > 0 && (
-          <ChartCard title="Vulnerability Categories" description="Types of security issues found">
-            <ChartContainer config={{ value: { label: 'Count' } }} className="h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
+            <div className="px-5 py-4 space-y-2.5">
+              {findingsByCategory.map(([category, count], i) => {
+                const barColor = CATEGORY_COLORS[category] || '#94a3b8';
+                const pct = (count / maxCategoryCount) * 100;
+                return (
+                  <div
+                    key={category}
+                    className="flex items-center gap-3"
                   >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend
-                    formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
-                    wrapperStyle={{ fontSize: '12px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </ChartCard>
+                    <span className="section-label text-[0.7rem] w-32 shrink-0 truncate">
+                      {category.replace(/_/g, ' ')}
+                    </span>
+                    <div className="flex-1 h-4 bg-muted/30 rounded-sm overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-sm"
+                        style={{ backgroundColor: barColor }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.6, delay: 0.4 + i * 0.08 }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums w-6 text-right">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
         )}
       </div>
 
-      {/* Category Scores */}
-      {report.category_scores && Object.keys(report.category_scores).length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="card-clean rounded-none overflow-hidden border border-border"
-        >
-          <div className="p-8 border-b border-border/30">
-            <h3 className="section-label">Category Scores</h3>
-            <p className="text-sm text-muted-foreground font-light mt-2">Score breakdown by analysis category</p>
-          </div>
-          <div className="p-8 grid grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(report.category_scores).map(([category, score]) => (
-              <div key={category} className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="section-label">
-                    {category.replace(/_/g, ' ')}
-                  </span>
-                  <span className="text-sm font-extralight" style={{ color: getScoreColor(score) }}>
-                    {Math.round(score)}
-                  </span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: getScoreColor(score) }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${score}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Most Dangerous Files Table */}
+      {/* Most Dangerous Files */}
       {dangerousFiles.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="card-clean rounded-none overflow-hidden border border-border"
         >
-          <div className="p-8 border-b border-border/30">
-            <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-primary" />
-              <h3 className="section-label">Most Dangerous Files</h3>
+          <div className="px-5 py-4 border-b border-border/30">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <h3 className="section-label">Hotspot Files</h3>
             </div>
-            <p className="text-sm text-muted-foreground font-light mt-2">Files with the highest risk scores</p>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/30 hover:bg-transparent">
-                <TableHead className="section-label">File Name</TableHead>
-                <TableHead className="section-label text-center">Risk Score</TableHead>
-                <TableHead className="section-label text-center">Findings</TableHead>
-                <TableHead className="section-label text-center">Severity</TableHead>
-                <TableHead className="section-label text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {dangerousFiles.map((file, index) => (
-                <TableRow
-                  key={file.fileName}
-                  className="border-border/30 hover:bg-muted/10 transition-colors"
-                >
-                  <TableCell className="font-mono text-sm">
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                    >
-                      {file.fileName}
-                    </motion.div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className={`font-bold ${
-                      file.riskScore >= 80 ? 'text-red-400' :
-                      file.riskScore >= 60 ? 'text-orange-400' :
-                      'text-yellow-400'
-                    }`}>
-                      {file.riskScore}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center text-muted-foreground">
-                    {file.linesFlagged}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <SeverityBadge severity={file.severity} size="sm" />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary" asChild>
-                      <Link href={`/vulnerabilities?id=${report.id}`}>
-                        View Details
-                      </Link>
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border/30 hover:bg-transparent">
+                  <TableHead className="section-label text-[0.65rem]">File</TableHead>
+                  <TableHead className="section-label text-[0.65rem] text-center">Risk</TableHead>
+                  <TableHead className="section-label text-[0.65rem] text-center">Issues</TableHead>
+                  <TableHead className="section-label text-[0.65rem] text-center">Severity</TableHead>
+                  <TableHead className="section-label text-[0.65rem] text-right">Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {dangerousFiles.map((file) => (
+                  <TableRow
+                    key={file.fileName}
+                    className="border-border/30 hover:bg-muted/10 transition-colors"
+                  >
+                    <TableCell className="font-mono text-xs max-w-[300px]">
+                      <span className="truncate block">{file.fileName}</span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={`text-sm font-bold ${
+                        file.riskScore >= 80 ? 'text-red-400' :
+                        file.riskScore >= 60 ? 'text-orange-400' :
+                        'text-yellow-400'
+                      }`}>
+                        {file.riskScore}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center text-sm text-muted-foreground">
+                      {file.linesFlagged}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <SeverityBadge severity={file.severity} size="sm" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary h-7" asChild>
+                        <Link href={`/vulnerabilities?id=${report.id}`}>
+                          Details
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </motion.div>
       )}
 
-      {/* AI Summary Panel */}
+      {/* AI Summary */}
       {executiveSummary && <SummaryPanel summary={executiveSummary} />}
     </div>
   );
@@ -491,10 +449,10 @@ export default function DashboardPage() {
   }, [scanId]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col h-full">
       <Navbar title={scanId ? "Scan Report" : "Dashboard"} />
 
-      <div className="flex-1 p-8 lg:p-10">
+      <div className="flex-1 p-8 lg:p-12">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <motion.div

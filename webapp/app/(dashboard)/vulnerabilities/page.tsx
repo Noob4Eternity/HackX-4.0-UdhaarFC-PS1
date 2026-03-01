@@ -203,7 +203,7 @@ export default function VulnerabilitiesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex flex-col h-full">
         <Navbar title="Vulnerabilities" />
         <div className="flex-1 flex items-center justify-center">
           <motion.div
@@ -218,7 +218,7 @@ export default function VulnerabilitiesPage() {
 
   if (!scanId) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex flex-col h-full">
         <Navbar title="Vulnerabilities" />
         <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
           <div className="card-clean rounded-none p-12 text-center border border-border">
@@ -238,7 +238,7 @@ export default function VulnerabilitiesPage() {
 
   if (error || !report) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex flex-col h-full">
         <Navbar title="Vulnerabilities" />
         <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
           <div className="card-clean rounded-none p-12 text-center border border-red-500/30">
@@ -277,7 +277,7 @@ export default function VulnerabilitiesPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col h-full">
       <Navbar title="Vulnerabilities" />
 
       <div className="flex-1 p-6 lg:p-8 space-y-6">
