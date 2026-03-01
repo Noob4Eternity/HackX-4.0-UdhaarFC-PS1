@@ -43,7 +43,7 @@ export default function RootLayout({
             toastOptions={{
               style: {
                 background: "rgba(20, 30, 50, 0.95)",
-                border: "1px solid rgba(100, 200, 255, 0.2)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
                 color: "#fff",
               },
             }}

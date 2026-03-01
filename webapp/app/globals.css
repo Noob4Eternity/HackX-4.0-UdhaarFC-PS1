@@ -58,8 +58,8 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.2 0 0);
   --input: oklch(0.15 0 0);
-  --ring: oklch(0.9 0.2 135);
-  --chart-1: oklch(0.9 0.2 135);
+  --ring: oklch(0.7 0 0);
+  --chart-1: oklch(0.85 0 0);
   --chart-2: oklch(0.5 0.2 280);
   --chart-3: oklch(0.7 0.2 145);
   --chart-4: oklch(0.7 0.2 60);
@@ -72,7 +72,7 @@
   --sidebar-accent: oklch(0.15 0 0);
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.2 0 0);
-  --sidebar-ring: oklch(0.9 0.2 135);
+  --sidebar-ring: oklch(0.7 0 0);
 
   /* Custom colors for VibeCheck */
   --cyan: oklch(0.98 0 0); /* Changed to white */
@@ -103,8 +103,8 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.2 0 0);
   --input: oklch(0.15 0 0);
-  --ring: oklch(0.9 0.2 135);
-  --chart-1: oklch(0.9 0.2 135);
+  --ring: oklch(0.7 0 0);
+  --chart-1: oklch(0.85 0 0);
   --chart-2: oklch(0.5 0.2 280);
   --chart-3: oklch(0.7 0.2 145);
   --chart-4: oklch(0.7 0.2 60);
@@ -116,7 +116,7 @@
   --sidebar-accent: oklch(0.15 0 0);
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.2 0 0);
-  --sidebar-ring: oklch(0.9 0.2 135);
+  --sidebar-ring: oklch(0.7 0 0);
 }
 
 @theme {

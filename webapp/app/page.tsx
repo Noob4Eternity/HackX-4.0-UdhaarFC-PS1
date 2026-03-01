@@ -57,7 +57,7 @@ export default function LandingPage() {
     <div className="landing-fonts relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Light Rays */}
       <LightRays
-        color="rgba(0, 180, 220, 0.12)"
+        color="rgba(255, 255, 255, 0.08)"
         count={8}
         blur={40}
         speed={16}

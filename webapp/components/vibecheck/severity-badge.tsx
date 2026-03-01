@@ -12,7 +12,7 @@ export function SeverityBadge({ severity, size = 'md' }: SeverityBadgeProps) {
     critical: 'bg-red-500/10 text-red-400 border-red-500/30',
     high: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
     medium: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
-    low: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    low: 'bg-slate-500/10 text-slate-400 border-slate-500/30',
   };
 
   const sizes = {

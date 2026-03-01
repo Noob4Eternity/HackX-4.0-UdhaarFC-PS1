@@ -41,20 +41,20 @@ const SEVERITY_COLORS: Record<string, string> = {
   Critical: '#ef4444',
   High: '#f97316',
   Medium: '#eab308',
-  Low: '#3b82f6',
+  Low: '#94a3b8',
   Info: '#6b7280',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
   secret: '#a855f7',
   sast: '#ef4444',
-  vulnerable_dependency: '#06b6d4',
+  vulnerable_dependency: '#cbd5e1',
   hallucinated_dependency: '#f97316',
   hallucinated_import: '#f97316',
   compliance_gdpr: '#22c55e',
   compliance_soc2: '#22c55e',
   prompt_injection: '#eab308',
-  code_quality: '#3b82f6',
+  code_quality: '#94a3b8',
   iac_security: '#f59e0b',
   llm_review: '#8b5cf6',
   vibe_fingerprint: '#ec4899',
@@ -79,7 +79,7 @@ function computeCategoryDistribution(findings: Finding[]) {
     .map(([name, value]) => ({
       name: name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
       value,
-      fill: CATEGORY_COLORS[name] || '#3b82f6',
+      fill: CATEGORY_COLORS[name] || '#94a3b8',
     }));
 }
 
@@ -285,7 +285,7 @@ function ReportView({ report }: { report: Report }) {
               <p className="section-label mt-1">Medium</p>
             </div>
             <div>
-              <p className="text-4xl font-extralight text-blue-400">{severityCounts.low}</p>
+              <p className="text-4xl font-extralight text-slate-400">{severityCounts.low}</p>
               <p className="section-label mt-1">Low</p>
             </div>
           </div>
