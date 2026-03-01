@@ -9,6 +9,9 @@ export interface Finding {
   remediation: string;
   ai_prompt: string;
   tool: string;
+  cwe?: string | null;
+  confidence?: number | null;
+  compliance_ref?: string | null;
 }
 
 export interface Report {
@@ -21,6 +24,11 @@ export interface Report {
   findings: Finding[];
   trigger_source: string;
   scanned_at: string;
+  grade?: string | null;
+  languages_detected?: string[];
+  files_scanned?: number | null;
+  scan_time?: number | null;
+  tokens_used?: number | null;
 }
 
 export interface ReportSummary {
@@ -62,6 +70,8 @@ export const SCAN_PHASES: { id: string; label: string }[] = [
   { id: "compliance", label: "Compliance" },
   { id: "hallucination", label: "Hallucination" },
   { id: "prompt_injection", label: "Prompt Inj." },
+  { id: "cost_efficiency", label: "Cost" },
+  { id: "nextjs", label: "Next.js" },
   { id: "ai_summary", label: "AI Summary" },
   { id: "saving", label: "Saving" },
 ];
@@ -83,6 +93,21 @@ export function getSeverityColor(severity: string): string {
 
 export function getScoreColor(score: number): string {
   if (score >= 80) return "#22c55e";
-  if (score >= 50) return "#eab308";
+  if (score >= 70) return "#eab308";
   return "#ef4444";
+}
+
+export function getGradeColor(grade: string): string {
+  if (grade.startsWith("A")) return "#22c55e";
+  if (grade.startsWith("B")) return "#84cc16";
+  if (grade.startsWith("C")) return "#eab308";
+  if (grade.startsWith("D")) return "#f97316";
+  return "#ef4444";
+}
+
+export function getFullVerdict(score: number): string {
+  if (score >= 80) return "Production Ready";
+  if (score >= 60) return "Needs Remediation";
+  if (score >= 40) return "Not Production Ready";
+  return "Critical — Do Not Deploy";
 }

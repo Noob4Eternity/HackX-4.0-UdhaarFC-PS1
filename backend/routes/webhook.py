@@ -147,6 +147,8 @@ async def _handle_pr_scan(
         from vibe_check.analyzers.hallucination import HallucinationDetector
         from vibe_check.analyzers.compliance import ComplianceAnalyzer
         from vibe_check.analyzers.prompt_injection import PromptInjectionAnalyzer
+        from vibe_check.analyzers.cost import CostAnalyzer
+        from vibe_check.analyzers.nextjs import NextJSAnalyzer
         from vibe_check.analyzers.llm_summarizer import LLMSummarizer
         from vibe_check.utils.config import load_config
         from vibe_check.core.orchestrator import Orchestrator
@@ -155,7 +157,8 @@ async def _handle_pr_scan(
         analyzers = [
             SecretsAnalyzer(), SASTAnalyzer(), DependencyAnalyzer(),
             HallucinationDetector(), ComplianceAnalyzer(),
-            PromptInjectionAnalyzer(), LLMSummarizer(),
+            PromptInjectionAnalyzer(), CostAnalyzer(), NextJSAnalyzer(),
+            LLMSummarizer(),
         ]
         orchestrator = Orchestrator(analyzers=analyzers, config=config)
         result = await orchestrator.run(repo_path)

@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle,
   FileCode,
-  ExternalLink,
+  Copy,
+  Check,
   ChevronDown,
   ChevronUp,
   Filter,
@@ -15,6 +16,7 @@ import {
 import Link from 'next/link';
 import { Navbar } from '@/components/vibecheck/navbar';
 import { SeverityBadge } from '@/components/vibecheck/severity-badge';
+import { TableSkeleton } from '@/components/vibecheck/skeleton-loaders';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -41,10 +43,13 @@ function VulnerabilityRow({ finding, isExpanded, onToggle }: {
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const handleFixWithAI = () => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyPrompt = () => {
     if (finding.ai_prompt) {
-      const encodedPrompt = encodeURIComponent(finding.ai_prompt);
-      window.open(`https://chat.openai.com/?prompt=${encodedPrompt}`, '_blank');
+      navigator.clipboard.writeText(finding.ai_prompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -78,11 +83,11 @@ function VulnerabilityRow({ finding, isExpanded, onToggle }: {
             <Button
               size="sm"
               variant="outline"
-              onClick={handleFixWithAI}
+              onClick={handleCopyPrompt}
               className="gap-2 text-primary border-primary hover:bg-primary/10 whitespace-nowrap rounded-none"
             >
-              Fix with AI
-              <ExternalLink className="h-3.5 w-3.5" />
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? 'Copied!' : 'Copy Fix'}
             </Button>
           )}
         </TableCell>
@@ -132,6 +137,21 @@ function VulnerabilityRow({ finding, isExpanded, onToggle }: {
                         <span className="text-xs px-2.5 py-1 rounded-full bg-muted/50 text-muted-foreground">
                           Tool: {finding.tool}
                         </span>
+                        {finding.cwe && (
+                          <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                            {finding.cwe}
+                          </span>
+                        )}
+                        {finding.confidence != null && (
+                          <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            Confidence: {Math.round(finding.confidence * 100)}%
+                          </span>
+                        )}
+                        {finding.compliance_ref && (
+                          <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                            {finding.compliance_ref}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -150,11 +170,12 @@ function VulnerabilityRow({ finding, isExpanded, onToggle }: {
                           </pre>
                         </div>
                         <Button
-                          onClick={handleFixWithAI}
-                          className="mt-3 gap-2 rounded-none"
+                          onClick={handleCopyPrompt}
+                          variant="outline"
+                          className="mt-3 gap-2 rounded-none border-primary/30 text-primary hover:bg-primary/5"
                         >
-                          Get AI-Powered Fix
-                          <ExternalLink className="h-4 w-4" />
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          {copied ? 'Copied to Clipboard' : 'Copy AI Fix Prompt'}
                         </Button>
                       </div>
                     )}
@@ -205,12 +226,8 @@ export default function VulnerabilitiesPage() {
     return (
       <div className="flex flex-col h-full">
         <Navbar title="Vulnerabilities" />
-        <div className="flex-1 flex items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full"
-          />
+        <div className="flex-1 p-6 lg:p-8">
+          <TableSkeleton rows={8} />
         </div>
       </div>
     );

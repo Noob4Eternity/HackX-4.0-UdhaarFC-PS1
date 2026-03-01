@@ -1,7 +1,4 @@
-"""Report routes — stub for Member B.
-
-Member B will replace this with the Supabase-backed implementation.
-"""
+"""Report routes — fetch scan reports and summaries from Supabase."""
 
 from __future__ import annotations
 

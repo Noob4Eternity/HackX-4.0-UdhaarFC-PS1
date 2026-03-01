@@ -15,6 +15,7 @@ import {
   Star,
   RefreshCw,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +80,7 @@ export default function ScanPage() {
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [reposLoading, setReposLoading] = useState(true);
   const [reposError, setReposError] = useState<string | null>(null);
+  const [repoSearch, setRepoSearch] = useState("");
 
   const fetchRepos = useCallback(async () => {
     setReposLoading(true);
@@ -397,51 +399,67 @@ export default function ScanPage() {
                       No repositories found
                     </p>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {repos.slice(0, 9).map((repo, i) => (
-                        <motion.button
-                          key={repo.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.03 }}
-                          onClick={() => handleRepoScan(repo)}
-                          className="text-left p-4 rounded-none border border-border bg-background/30 hover:border-primary hover:bg-primary/5 transition-all group"
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm text-foreground truncate group-hover:text-primary transition-colors">
-                              {repo.name}
-                            </span>
-                            {repo.private && (
-                              <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
-                            )}
-                          </div>
-                          {repo.description && (
-                            <p className="text-xs text-muted-foreground truncate mb-2">
-                              {repo.description}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            {repo.language && (
-                              <span className="flex items-center gap-1">
-                                <span
-                                  className="h-2.5 w-2.5 rounded-full"
-                                  style={{
-                                    backgroundColor:
-                                      LANGUAGE_COLORS[repo.language] || "#888",
-                                  }}
-                                />
-                                {repo.language}
+                    <div>
+                      {repos.length > 9 && (
+                        <div className="relative mb-3">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search repositories..."
+                            value={repoSearch}
+                            onChange={(e) => setRepoSearch(e.target.value)}
+                            className="pl-10 bg-background/50 border-border/50 h-9 text-sm"
+                          />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {repos
+                          .filter(r => !repoSearch || r.name.toLowerCase().includes(repoSearch.toLowerCase()) || (r.description && r.description.toLowerCase().includes(repoSearch.toLowerCase())))
+                          .slice(0, 12)
+                          .map((repo, i) => (
+                          <motion.button
+                            key={repo.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.03 }}
+                            onClick={() => handleRepoScan(repo)}
+                            className="text-left p-4 rounded-none border border-border bg-background/30 hover:border-primary hover:bg-primary/5 transition-all group"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-sm text-foreground truncate group-hover:text-primary transition-colors">
+                                {repo.name}
                               </span>
+                              {repo.private && (
+                                <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
+                              )}
+                            </div>
+                            {repo.description && (
+                              <p className="text-xs text-muted-foreground truncate mb-2">
+                                {repo.description}
+                              </p>
                             )}
-                            {repo.stargazers_count > 0 && (
-                              <span className="flex items-center gap-1">
-                                <Star className="h-3 w-3" />
-                                {repo.stargazers_count}
-                              </span>
-                            )}
-                          </div>
-                        </motion.button>
-                      ))}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              {repo.language && (
+                                <span className="flex items-center gap-1">
+                                  <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{
+                                      backgroundColor:
+                                        LANGUAGE_COLORS[repo.language] || "#888",
+                                    }}
+                                  />
+                                  {repo.language}
+                                </span>
+                              )}
+                              {repo.stargazers_count > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Star className="h-3 w-3" />
+                                  {repo.stargazers_count}
+                                </span>
+                              )}
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
