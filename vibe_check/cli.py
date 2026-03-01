@@ -105,9 +105,11 @@ def scan(
 
     # Output
     if format == "json":
-        console.print(result.to_json())
+        # Use sys.stdout directly — console.print() adds Rich ANSI codes that
+        # break JSON parsing in the VS Code extension and CI pipelines.
+        sys.stdout.write(result.to_json() + "\n")
     elif format == "markdown":
-        console.print(result.to_markdown())
+        sys.stdout.write(result.to_markdown() + "\n")
     else:
         from vibe_check.core.report import render_terminal
         render_terminal(result)

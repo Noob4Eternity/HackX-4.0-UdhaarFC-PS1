@@ -4,6 +4,7 @@
  */
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { Scanner } from './scanner';
 import { ScanResult, ScanState } from './types';
 import { getWebviewHTML } from './webview';
@@ -14,9 +15,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _scanner: Scanner;
   private _state: ScanState;
+  private _diagnosticCollection: vscode.DiagnosticCollection;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     this._scanner = new Scanner();
+    this._diagnosticCollection = vscode.languages.createDiagnosticCollection('vibecheck');
     this._state = {
       status: 'idle',
       repoName: this._scanner.getRepoName(),
@@ -150,24 +153,35 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   /**
    * Publish findings as VS Code diagnostics (squiggly underlines).
    */
+  /**
+   * Dispose the diagnostic collection (called on extension deactivate).
+   */
+  public dispose(): void {
+    this._diagnosticCollection.dispose();
+  }
+
   private _publishDiagnostics(result: ScanResult): void {
-    const collection = vscode.languages.createDiagnosticCollection('vibecheck');
-    collection.clear();
+    this._diagnosticCollection.clear();
 
     const diagMap = new Map<string, vscode.Diagnostic[]>();
     const wsPath = this._scanner.getWorkspacePath() || '';
 
     for (const finding of result.findings) {
+      // Skip findings without a file location
       if (!finding.file) { continue; }
+      // Skip INFO findings (LLM remediation advice — too noisy for diagnostics)
+      if (finding.severity === 'info') { continue; }
 
-      const filePath = `${wsPath}/${finding.file}`;
+      const filePath = path.join(wsPath, finding.file);
       const line = Math.max(0, (finding.line || 1) - 1);
 
       const severity = finding.severity === 'critical' || finding.severity === 'high'
         ? vscode.DiagnosticSeverity.Error
         : finding.severity === 'medium'
         ? vscode.DiagnosticSeverity.Warning
-        : vscode.DiagnosticSeverity.Information;
+        : finding.severity === 'low'
+        ? vscode.DiagnosticSeverity.Information
+        : vscode.DiagnosticSeverity.Hint;
 
       const range = new vscode.Range(line, 0, line, 1000);
       const diag = new vscode.Diagnostic(range, `${finding.title}: ${finding.description}`, severity);
@@ -180,7 +194,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     for (const [filePath, diags] of diagMap) {
-      collection.set(vscode.Uri.file(filePath), diags);
+      this._diagnosticCollection.set(vscode.Uri.file(filePath), diags);
     }
   }
 

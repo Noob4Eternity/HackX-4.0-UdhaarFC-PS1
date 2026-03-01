@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { SidebarProvider } from './sidebarProvider';
 
+let sidebarProvider: SidebarProvider | undefined;
+
 export function activate(context: vscode.ExtensionContext) {
-  const sidebarProvider = new SidebarProvider(context.extensionUri);
+  sidebarProvider = new SidebarProvider(context.extensionUri);
 
   // Register the webview sidebar
   context.subscriptions.push(
@@ -20,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.commands.executeCommand('vibecheck-sidebar.focus');
       // Small delay to allow webview to initialize
       setTimeout(() => {
-        sidebarProvider.triggerScan();
+        sidebarProvider?.triggerScan();
       }, 500);
     })
   );
@@ -28,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Command: open full report in an editor tab
   context.subscriptions.push(
     vscode.commands.registerCommand('vibecheck.openReport', () => {
-      const result = sidebarProvider.getLastResult();
+      const result = sidebarProvider?.getLastResult();
       if (!result) {
         vscode.window.showWarningMessage('No scan results available. Run a scan first.');
         return;
@@ -44,5 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  // Cleanup if needed
+  sidebarProvider?.dispose();
+  sidebarProvider = undefined;
 }
