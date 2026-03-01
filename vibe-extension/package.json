@@ -1,0 +1,112 @@
+{
+  "name": "vibecheck-security",
+  "displayName": "VibeCheck Security",
+  "description": "AI-powered vulnerability intelligence for your codebase — scan, detect, and remediate security issues from within VS Code.",
+  "version": "0.1.0",
+  "publisher": "vibecheck",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vibecheck/vibe-extension"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "vulnerability",
+    "scanner",
+    "devsecops",
+    "AI",
+    "SAST"
+  ],
+  "activationEvents": [
+    "onView:vibecheck-sidebar"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vibecheck.scan",
+        "title": "VibeCheck: Scan Repository",
+        "icon": {
+          "light": "media/scan-light.svg",
+          "dark": "media/scan-dark.svg"
+        }
+      },
+      {
+        "command": "vibecheck.openReport",
+        "title": "VibeCheck: Open Report"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vibecheck",
+          "title": "VibeCheck Security",
+          "icon": "media/shield.svg"
+        }
+      ]
+    },
+    "views": {
+      "vibecheck": [
+        {
+          "type": "webview",
+          "id": "vibecheck-sidebar",
+          "name": "VibeCheck Security"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "vibecheck.scan",
+          "when": "view == vibecheck-sidebar",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "VibeCheck Security",
+      "properties": {
+        "vibecheck.pythonPath": {
+          "type": "string",
+          "default": "python3",
+          "description": "Path to Python interpreter with vibe-check-cli installed."
+        },
+        "vibecheck.scanMode": {
+          "type": "string",
+          "enum": ["full", "fast"],
+          "default": "full",
+          "description": "Scan mode: 'full' includes LLM analysis, 'fast' skips it."
+        },
+        "vibecheck.threshold": {
+          "type": "number",
+          "default": 60,
+          "description": "Score threshold — scores below this are flagged as failing."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.3.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0"
+  }
+}
