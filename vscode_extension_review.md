@@ -4,41 +4,54 @@ Use this to verify the extension is correctly invoking `vibe-check` and displayi
 
 ---
 
-## 1. CLI Version Check
+## 1. Code Version Check
 
-**Is the extension using v0.2.1?**
+**Is the local `vibe_check/` folder in the Phase 2 repo up to date?**
 
-The earlier versions (≤0.1.6) had massive false positive issues — lock file floods, keyword detector bugs, HTTP URL spam, etc. All of these are fixed in v0.2.1.
+The extension imports directly from the local `vibe_check/` folder — NOT from the pip-installed package. This means **every fix in the library repo must be synced** to the Phase 2 repo for the extension to use it.
 
+The latest version with all false positive fixes is **v0.2.1**. Critical fixes include:
+- [secrets.py](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/vibe_check/analyzers/secrets.py) — KeywordDetector filter, lock file exclusions, mock data exclusions
+- [hallucination.py](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/vibe_audit/analyzers/hallucination.py) — expanded known exports (ReactNode, FrozenSet, Roboto_Mono, etc.)
+- [compliance.py](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/vibe_audit/analyzers/compliance.py) — test/fixture exclusion, LLM finding cap, evidence-backed prompt
+- [gdpr.yml](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/vibe_check/rules/gdpr.yml) — HTTP URL regex excludes localhost/dev URLs
+- [scorer.py](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/vibe_audit/core/scorer.py) — diminishing returns (full → 50% → 25%)
+- [llm_summarizer.py](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/vibe_check/analyzers/llm_summarizer.py) — remediation findings downgraded to INFO
+
+**To sync (run in Phase 2 repo):**
 ```bash
-vibe-check --version  # Must show 0.2.1+
-pip show vibe-check-cli
+rsync -av --delete ~/Desktop/HackX-4.0-UdhaarFC-PS1/vibe_check/ ./vibe_check/
+git add vibe_check/ && git commit -m "sync: vibe_check v0.2.1" && git push
 ```
 
 > [!CAUTION]
-> If the extension bundles its own version or pins an older version in [package.json](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/tests/fixtures/vulnerable-nextjs-app/package.json) postinstall, it will use stale code regardless of what's on PyPI.
+> If the local `vibe_check/` folder is stale, ALL false positive fixes are missing and the extension will show hundreds of false errors.
 
 ---
 
-## 2. How Is the Extension Invoking the CLI?
+## 2. How Is the Extension Invoking the scan?
 
-**Check the scan command being constructed.** Look for the command-building logic — it should match:
+**Check how the extension invokes the scan.** Since it uses the local `vibe_check/` module directly (not the CLI), look for how it calls the orchestrator or individual analyzers.
 
+If calling via Python subprocess:
 ```bash
-# For inline diagnostics (real-time in editor):
-vibe-check scan . --mode fast --severity critical,high --format json
+python -m vibe_check.cli scan . --mode fast --severity critical,high --format json
+```
 
-# For full panel report:
-vibe-check scan . --format json
+If importing directly in the extension's backend:
+```python
+from vibe_check.core.orchestrator import Orchestrator
+results = await orchestrator.run(repo_path, mode="fast")
 ```
 
 ### Common bugs:
+
 | Issue | Symptom | Fix |
 |-------|---------|-----|
-| Missing `--mode fast` | Slow scans, LLM errors without API key | Add `--mode fast` for inline diagnostics |
-| Missing `--format json` | Extension tries to parse Rich terminal output | Always use `--format json` for programmatic consumption |
-| Hardcoded `--severity` without filter | Shows LOW/INFO findings as errors | Filter to `critical,high` for diagnostics, show `medium` as warnings |
-| Running scan on every file save | Excessive CPU, repeated findings | Debounce to max once per 30s, or trigger on file save with cooldown |
+| Missing `mode="fast"` | Slow scans, LLM errors without API key | Use fast mode for inline diagnostics |
+| Not getting JSON output | Extension tries to parse Rich terminal output | Use `--format json` if calling CLI, or use the Python API directly |
+| No severity filter | Shows LOW/INFO findings as errors | Filter to `critical,high` for diagnostics, show `medium` as warnings |
+| Running scan on every file save | Excessive CPU, repeated findings | Debounce to max once per 30s, or trigger on workspace-level save |
 
 ---
 
@@ -47,6 +60,7 @@ vibe-check scan . --format json
 **Is the extension correctly parsing `vibe-check scan --format json` output?**
 
 The JSON output structure is:
+
 ```json
 {
   "score": 85.0,
@@ -70,12 +84,13 @@ The JSON output structure is:
 ```
 
 ### Common bugs:
-| Issue | Symptom | Fix |
-|-------|---------|-----|
-| Parsing `stderr` instead of `stdout` | Semgrep warnings show as findings | Only parse `stdout`, ignore `stderr` |
-| Not handling missing [file](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/tests/fixtures/vulnerable-nextjs-app/components/UserProfile.jsx#3-12) field | Crash on compliance findings (no file) | Check for `null`/missing [file](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/tests/fixtures/vulnerable-nextjs-app/components/UserProfile.jsx#3-12) before creating diagnostic |
-| Not handling missing `line` field | Diagnostic at line 0 | Default to line 1 if `line` is null |
-| Parsing markdown output as JSON | Parse error | Ensure `--format json` is passed |
+
+| Issue                                | Symptom                                | Fix                                                        |
+| ------------------------------------ | -------------------------------------- | ---------------------------------------------------------- |
+| Parsing `stderr` instead of `stdout` | Semgrep warnings show as findings      | Only parse `stdout`, ignore `stderr`                       |
+| Not handling missing [file](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/tests/fixtures/vulnerable-nextjs-app/components/UserProfile.jsx#3-12) field    | Crash on compliance findings (no file) | Check for `null`/missing [file](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/tests/fixtures/vulnerable-nextjs-app/components/UserProfile.jsx#3-12) before creating diagnostic |
+| Not handling missing `line` field    | Diagnostic at line 0                   | Default to line 1 if `line` is null                        |
+| Parsing markdown output as JSON      | Parse error                            | Ensure `--format json` is passed                           |
 
 ---
 
@@ -84,25 +99,33 @@ The JSON output structure is:
 **Are severities mapped correctly to VS Code diagnostic levels?**
 
 Correct mapping:
+
 ```typescript
 function mapSeverity(sev: string): vscode.DiagnosticSeverity {
   switch (sev) {
-    case 'critical': return vscode.DiagnosticSeverity.Error;
-    case 'high':     return vscode.DiagnosticSeverity.Error;
-    case 'medium':   return vscode.DiagnosticSeverity.Warning;
-    case 'low':      return vscode.DiagnosticSeverity.Information;
-    case 'info':     return vscode.DiagnosticSeverity.Hint;
-    default:         return vscode.DiagnosticSeverity.Warning;
+    case "critical":
+      return vscode.DiagnosticSeverity.Error;
+    case "high":
+      return vscode.DiagnosticSeverity.Error;
+    case "medium":
+      return vscode.DiagnosticSeverity.Warning;
+    case "low":
+      return vscode.DiagnosticSeverity.Information;
+    case "info":
+      return vscode.DiagnosticSeverity.Hint;
+    default:
+      return vscode.DiagnosticSeverity.Warning;
   }
 }
 ```
 
 ### Common bugs:
-| Issue | Symptom | Fix |
-|-------|---------|-----|
-| All findings shown as `Error` | Red squiggles everywhere | Map `medium` → Warning, `low` → Info, `info` → Hint |
-| Not filtering by severity | 50+ diagnostics flood the panel | Only show `critical`+`high` as errors, `medium` as warnings |
-| INFO remediation findings showing | LLM remediation prompts appear as errors | Skip findings where `severity === 'info'` from diagnostics |
+
+| Issue                             | Symptom                                  | Fix                                                         |
+| --------------------------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| All findings shown as `Error`     | Red squiggles everywhere                 | Map `medium` → Warning, `low` → Info, `info` → Hint         |
+| Not filtering by severity         | 50+ diagnostics flood the panel          | Only show `critical`+`high` as errors, `medium` as warnings |
+| INFO remediation findings showing | LLM remediation prompts appear as errors | Skip findings where `severity === 'info'` from diagnostics  |
 
 ---
 
@@ -122,11 +145,12 @@ const uri = vscode.Uri.file(finding.file); // Won't match open editors
 ```
 
 ### Common bugs:
-| Issue | Symptom | Fix |
-|-------|---------|-----|
-| Using raw relative paths | Diagnostics don't appear on open files | Resolve against `vscode.workspace.workspaceFolders[0].uri.fsPath` |
-| Platform path separators | Works on Mac, fails on Windows | Use `path.join()` or `vscode.Uri.joinPath()` |
-| Findings with `null` file | Crash when creating URI | Skip findings where [file](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/tests/fixtures/vulnerable-nextjs-app/components/UserProfile.jsx#3-12) is null (compliance/LLM findings without specific files) |
+
+| Issue                     | Symptom                                | Fix                                                                                 |
+| ------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------- |
+| Using raw relative paths  | Diagnostics don't appear on open files | Resolve against `vscode.workspace.workspaceFolders[0].uri.fsPath`                   |
+| Platform path separators  | Works on Mac, fails on Windows         | Use `path.join()` or `vscode.Uri.joinPath()`                                        |
+| Findings with `null` file | Crash when creating URI                | Skip findings where [file](file:///home/ved/Desktop/HackX-4.0-UdhaarFC-PS1/tests/fixtures/vulnerable-nextjs-app/components/UserProfile.jsx#3-12) is null (compliance/LLM findings without specific files) |
 
 ---
 
@@ -146,11 +170,12 @@ for (const finding of findings) {
 ```
 
 ### Common bugs:
-| Issue | Symptom | Fix |
-|-------|---------|-----|
-| Not clearing previous diagnostics | Findings multiply on each scan | Call `diagnosticCollection.clear()` before each scan |
-| One diagnostic collection per scan | Old collections persist | Use a single `DiagnosticCollection` created in `activate()` |
-| Not disposing on deactivate | Memory leak | Dispose the collection in the `deactivate()` function |
+
+| Issue                              | Symptom                        | Fix                                                         |
+| ---------------------------------- | ------------------------------ | ----------------------------------------------------------- |
+| Not clearing previous diagnostics  | Findings multiply on each scan | Call `diagnosticCollection.clear()` before each scan        |
+| One diagnostic collection per scan | Old collections persist        | Use a single `DiagnosticCollection` created in `activate()` |
+| Not disposing on deactivate        | Memory leak                    | Dispose the collection in the `deactivate()` function       |
 
 ---
 
@@ -204,11 +229,11 @@ for f in d.get('findings', []):
 
 ## Summary: Most Likely Causes of "Too Many Errors"
 
-| Rank | Cause | Likelihood |
-|------|-------|------------|
-| 1 | Old CLI version (pre-0.2.1) | Very High |
-| 2 | All severities shown as Error (no severity mapping) | High |
-| 3 | INFO/remediation findings not filtered out | High |
-| 4 | Parsing stderr (semgrep warnings) as findings | Medium |
-| 5 | Not clearing diagnostics between scans (duplicates) | Medium |
-| 6 | Scanning wrong directory (not workspace root) | Low |
+| Rank | Cause                                               | Likelihood |
+| ---- | --------------------------------------------------- | ---------- |
+| 1    | **Stale local `vibe_check/` folder** (missing v0.2.1 fixes) | Very High |
+| 2    | All severities shown as Error (no severity mapping) | High       |
+| 3    | INFO/remediation findings not filtered out          | High       |
+| 4    | Parsing stderr (semgrep warnings) as findings       | Medium     |
+| 5    | Not clearing diagnostics between scans (duplicates) | Medium     |
+| 6    | Scanning wrong directory (not workspace root)       | Low        |
