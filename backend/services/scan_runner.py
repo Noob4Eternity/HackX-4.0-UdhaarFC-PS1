@@ -41,6 +41,7 @@ async def run_scan(
         from vibe_check.analyzers.hallucination import HallucinationDetector
         from vibe_check.analyzers.compliance import ComplianceAnalyzer
         from vibe_check.analyzers.prompt_injection import PromptInjectionAnalyzer
+        from vibe_check.analyzers.cost import CostAnalyzer
         from vibe_check.analyzers.llm_summarizer import LLMSummarizer
 
         analyzers = [
@@ -48,6 +49,7 @@ async def run_scan(
             SASTAnalyzer(),
             DependencyAnalyzer(),
             HallucinationDetector(),
+            CostAnalyzer(),
             ComplianceAnalyzer(),
             PromptInjectionAnalyzer(),
             LLMSummarizer(),
