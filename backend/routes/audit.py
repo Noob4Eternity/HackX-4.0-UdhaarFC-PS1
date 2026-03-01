@@ -5,8 +5,11 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
+import re
 import uuid
 from typing import Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
@@ -17,6 +20,19 @@ from backend.state import SCAN_STATUS, emit_progress
 logger = logging.getLogger("backend.routes.audit")
 
 router = APIRouter()
+
+
+def _extract_repo_name(url: str) -> str:
+    """Extract 'owner/repo' from a GitHub URL, falling back to the URL itself."""
+    parsed = urlparse(url)
+    path = parsed.path.strip("/")
+    # Remove .git suffix and credentials
+    path = re.sub(r"\.git$", "", path)
+    # For paths like "owner/repo" or "owner/repo/tree/main/..."
+    parts = path.split("/")
+    if len(parts) >= 2:
+        return f"{parts[0]}/{parts[1]}"
+    return path or url
 
 
 @router.post("/audit")
@@ -141,8 +157,9 @@ async def _scan_from_url(scan_id: str, repo_url: str) -> None:
     """Clone a public repo and run scan."""
     repo_path: str | None = None
     try:
+        display_name = _extract_repo_name(repo_url)
         repo_path = await repo_cloner.clone_from_url(repo_url)
-        await scan_runner.run_scan(repo_path, scan_id, trigger_source="url")
+        await scan_runner.run_scan(repo_path, scan_id, trigger_source="url", display_name=display_name)
     except Exception as exc:
         logger.error("URL scan %s failed: %s", scan_id, exc, exc_info=True)
         SCAN_STATUS[scan_id]["status"] = "error"
@@ -162,7 +179,7 @@ async def _scan_from_oauth(
         clone_url = f"https://x-access-token:{github_token}@github.com/{repo_name}.git"
         repo_path = await repo_cloner.clone_from_url(clone_url)
         emit_progress(scan_id, "Clone complete, starting scan...", "clone", "complete")
-        await scan_runner.run_scan(repo_path, scan_id, trigger_source="oauth")
+        await scan_runner.run_scan(repo_path, scan_id, trigger_source="oauth", display_name=repo_name)
     except Exception as exc:
         logger.error("OAuth scan %s failed: %s", scan_id, exc, exc_info=True)
         SCAN_STATUS[scan_id]["status"] = "error"
@@ -226,7 +243,9 @@ async def _scan_from_zip(
         else:
             repo_path = tmp_dir
 
-        await scan_runner.run_scan(repo_path, scan_id, trigger_source="zip")
+        # Use ZIP filename (without extension) as display name
+        display_name = os.path.splitext(filename)[0] if filename else "upload"
+        await scan_runner.run_scan(repo_path, scan_id, trigger_source="zip", display_name=display_name)
 
     except Exception as exc:
         logger.error("ZIP scan %s failed: %s", scan_id, exc, exc_info=True)

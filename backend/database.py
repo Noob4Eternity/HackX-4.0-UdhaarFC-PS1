@@ -167,7 +167,7 @@ async def get_recent_scans(limit: int = 20) -> list[dict]:
     try:
         res = (
             supabase.table("scans")
-            .select("id, repo_name, verdict, total_score, finding_count, scanned_at")
+            .select("id, repo_name, verdict, total_score, finding_count, scanned_at, trigger_source")
             .order("scanned_at", desc=True)
             .limit(limit)
             .execute()

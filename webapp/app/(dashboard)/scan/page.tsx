@@ -302,19 +302,11 @@ export default function ScanPage() {
                 {/* Header */}
                 <div className="text-center">
                   {scanError ? (
-                    <div className="inline-flex p-4 bg-red-500/10 mb-4">
-                      <AlertCircle className="h-10 w-10 text-red-400" />
-                    </div>
+                    <AlertCircle className="h-6 w-6 text-red-400 mx-auto mb-3" />
                   ) : (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="inline-flex p-4 bg-primary/10 mb-4"
-                    >
-                      <Loader2 className="h-10 w-10 text-primary" />
-                    </motion.div>
+                    <div className="h-5 w-5 border border-muted-foreground/30 border-t-foreground/70 rounded-full animate-spin mx-auto mb-3" />
                   )}
-                  <h2 className="text-2xl font-bold text-foreground mb-1">
+                  <h2 className="text-xl font-light text-foreground mb-1">
                     {scanError ? "Scan Failed" : "Scanning in Progress"}
                   </h2>
                   <p className="text-sm text-muted-foreground">
